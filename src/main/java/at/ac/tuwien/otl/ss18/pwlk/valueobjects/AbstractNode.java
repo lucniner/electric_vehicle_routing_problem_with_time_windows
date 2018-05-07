@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public abstract class AbstractNode {
 
+  private final int index;
   private final String id;
   private final Location location;
   private final double demand;
@@ -12,7 +13,8 @@ public abstract class AbstractNode {
   private final double serviceTime;
 
 
-  AbstractNode(final String id, final Location location, final double demand, final TimeWindow timeWindow, final double serviceTime) {
+  AbstractNode(final int index, final String id, final Location location, final double demand, final TimeWindow timeWindow, final double serviceTime) {
+    this.index = index;
     this.id = id;
     this.location = location;
     this.demand = demand;

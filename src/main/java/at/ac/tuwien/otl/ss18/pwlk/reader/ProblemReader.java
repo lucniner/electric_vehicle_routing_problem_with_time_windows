@@ -49,8 +49,10 @@ public class ProblemReader {
 
   private void parseNodes(final BufferedReader reader) throws IOException {
     String line = reader.readLine();
+    int index = 0;
     while (line != null && !line.startsWith("Q") && !line.trim().isEmpty()) {
-      handleNode(line);
+      handleNode(line, index);
+      index++;
       line = reader.readLine();
     }
   }
@@ -63,11 +65,11 @@ public class ProblemReader {
     }
   }
 
-  private void handleNode(final String line) {
+  private void handleNode(final String line, final int index) {
     final String formattedLine = line.replaceAll("\\s+", " ");
     final String[] lineElements = formattedLine.split(" ");
     final String firstElementInLine = lineElements[0];
-    final NodeInstanceReader reader = new NodeInstanceReader(lineElements);
+    final NodeInstanceReader reader = new NodeInstanceReader(index, lineElements);
 
     if (firstElementInLine.startsWith("D")) {
       depot = reader.extractDepot();

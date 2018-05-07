@@ -4,6 +4,7 @@ import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
 class NodeInstanceReader {
 
+  private final int index;
   private final String[] lineElements;
 
   private String id;
@@ -12,23 +13,24 @@ class NodeInstanceReader {
   private TimeWindow timeWindow;
   private double serviceTime;
 
-  NodeInstanceReader(final String[] lineElements) {
+  NodeInstanceReader(final int index, final String[] lineElements) {
+    this.index = index;
     this.lineElements = lineElements;
   }
 
   Depot extractDepot() {
     parseLine();
-    return new Depot(id, location, demand, timeWindow, serviceTime);
+    return new Depot(index, id, location, demand, timeWindow, serviceTime);
   }
 
   FuelStation extractFuelStation() {
     parseLine();
-    return new FuelStation(id, location, demand, timeWindow, serviceTime);
+    return new FuelStation(index, id, location, demand, timeWindow, serviceTime);
   }
 
   Customer extractCustomer() {
     parseLine();
-    return new Customer(id, location, demand, timeWindow, serviceTime);
+    return new Customer(index, id, location, demand, timeWindow, serviceTime);
   }
 
   private void parseLine() {
