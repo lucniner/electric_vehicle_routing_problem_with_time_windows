@@ -1,23 +1,43 @@
-package at.ac.tuwien.otl.ss18.pwlk.dto;
+package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 
 import java.util.Objects;
 
 public abstract class AbstractNode {
 
-  protected final String id;
-  protected final Location location;
-  protected final double demand;
-  protected final TimeWindow timeWindow;
-  protected final double serviceTime;
+  private final String id;
+  private final Location location;
+  private final double demand;
+  private final TimeWindow timeWindow;
+  private final double serviceTime;
 
 
-  protected AbstractNode(final String id, final Location location, final double demand, final TimeWindow timeWindow, final double serviceTime) {
+  AbstractNode(final String id, final Location location, final double demand, final TimeWindow timeWindow, final double serviceTime) {
     this.id = id;
     this.location = location;
     this.demand = demand;
     this.timeWindow = timeWindow;
     this.serviceTime = serviceTime;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public Location getLocation() {
+    return location;
+  }
+
+  public double getDemand() {
+    return demand;
+  }
+
+  public TimeWindow getTimeWindow() {
+    return timeWindow;
+  }
+
+  public double getServiceTime() {
+    return serviceTime;
   }
 
   @Override

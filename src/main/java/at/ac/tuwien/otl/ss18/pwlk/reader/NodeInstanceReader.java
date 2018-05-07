@@ -1,8 +1,8 @@
-package at.ac.tuwien.otl.ss18.pwlk.scenario;
+package at.ac.tuwien.otl.ss18.pwlk.reader;
 
-import at.ac.tuwien.otl.ss18.pwlk.dto.*;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
-public class NodeInstanceReader {
+class NodeInstanceReader {
 
   private final String[] lineElements;
 
@@ -12,21 +12,21 @@ public class NodeInstanceReader {
   private TimeWindow timeWindow;
   private double serviceTime;
 
-  public NodeInstanceReader(final String[] lineElements) {
+  NodeInstanceReader(final String[] lineElements) {
     this.lineElements = lineElements;
   }
 
-  public Depot extractDepot() {
+  Depot extractDepot() {
     parseLine();
     return new Depot(id, location, demand, timeWindow, serviceTime);
   }
 
-  public FuelStation extractFuelStation() {
+  FuelStation extractFuelStation() {
     parseLine();
     return new FuelStation(id, location, demand, timeWindow, serviceTime);
   }
 
-  public Customer extractCustomer() {
+  Customer extractCustomer() {
     parseLine();
     return new Customer(id, location, demand, timeWindow, serviceTime);
   }

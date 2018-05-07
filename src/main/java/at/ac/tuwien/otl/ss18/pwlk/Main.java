@@ -1,7 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk;
 
-import at.ac.tuwien.otl.ss18.pwlk.dto.ProblemInstance;
-import at.ac.tuwien.otl.ss18.pwlk.scenario.ProblemReader;
+import at.ac.tuwien.otl.ss18.pwlk.reader.ProblemReader;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 
 import java.io.IOException;
 

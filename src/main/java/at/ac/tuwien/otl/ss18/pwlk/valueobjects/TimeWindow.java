@@ -1,4 +1,4 @@
-package at.ac.tuwien.otl.ss18.pwlk.dto;
+package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 import java.util.Objects;
 

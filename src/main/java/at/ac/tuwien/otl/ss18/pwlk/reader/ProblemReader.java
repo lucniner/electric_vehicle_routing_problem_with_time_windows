@@ -1,9 +1,9 @@
-package at.ac.tuwien.otl.ss18.pwlk.scenario;
+package at.ac.tuwien.otl.ss18.pwlk.reader;
 
-import at.ac.tuwien.otl.ss18.pwlk.dto.Customer;
-import at.ac.tuwien.otl.ss18.pwlk.dto.Depot;
-import at.ac.tuwien.otl.ss18.pwlk.dto.FuelStation;
-import at.ac.tuwien.otl.ss18.pwlk.dto.ProblemInstance;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Customer;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Depot;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.FuelStation;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 
 import java.io.BufferedReader;
 import java.io.IOException;

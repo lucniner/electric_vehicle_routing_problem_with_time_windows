@@ -1,4 +1,4 @@
-package at.ac.tuwien.otl.ss18.pwlk.dto;
+package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 
 public class Depot extends AbstractNode {
