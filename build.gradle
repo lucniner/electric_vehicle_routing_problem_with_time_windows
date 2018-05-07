@@ -28,5 +28,5 @@ dependencies {
 }
 
 // Define the main class for the application
-mainClassName = 'App'
+mainClassName = 'at.ac.tuwien.otl.ss18.pwlk.Main'
 
