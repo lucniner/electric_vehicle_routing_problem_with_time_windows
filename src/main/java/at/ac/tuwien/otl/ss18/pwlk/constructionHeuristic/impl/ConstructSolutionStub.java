@@ -23,6 +23,7 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
     SolutionInstance solutionInstance = new SolutionInstance();
     ArrayList<Route> list = new ArrayList<>();
 
+    //TODO löschen und einen richtigen algorithmus implementieren
     for(Customer customer : problemInstance.getCustomers()) {
       LinkedList<AbstractNode> routeList = new LinkedList<>();
       routeList.add(problemInstance.getDepot());
