@@ -4,6 +4,8 @@ import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Customer;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Depot;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.FuelStation;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ProblemReader {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private final String instanceFilePath;
   private Depot depot;
@@ -28,6 +31,7 @@ public class ProblemReader {
   }
 
   public ProblemInstance retrieveProblemInstance() throws IOException {
+    logger.info("Read instance from path: " + instanceFilePath);
     try (BufferedReader reader =
                  new BufferedReader(
                          new InputStreamReader(

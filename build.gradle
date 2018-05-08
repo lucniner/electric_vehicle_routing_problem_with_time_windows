@@ -12,6 +12,17 @@ apply plugin: 'java'
 // Apply the application plugin to add support for building an application
 apply plugin: 'application'
 
+// Produce jar with manifest and dependencies to make it executable (location: build/lib)
+jar {
+    manifest {
+        attributes "Main-Class": "at.ac.tuwien.otl.ss18.pwlk.Main"
+    }
+
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
@@ -22,6 +33,8 @@ repositories {
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     compile 'com.google.guava:guava:23.0'
+
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
 
 
     testCompile 'junit:junit:4.12'
