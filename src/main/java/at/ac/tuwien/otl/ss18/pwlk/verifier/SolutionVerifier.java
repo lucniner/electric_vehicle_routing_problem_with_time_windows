@@ -36,6 +36,8 @@ public class SolutionVerifier {
       Process proc = Runtime.getRuntime().exec("java -jar "
               + jarPath
               + " "
+              + "-d"
+              + " "
               + problemDestination.toString()
               + " "
               + pathToSolution);
