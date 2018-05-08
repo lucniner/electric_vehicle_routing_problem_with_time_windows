@@ -1,44 +1,52 @@
 package at.ac.tuwien.otl.ss18.pwlk;
 
-import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
-import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl.ConstructSolutionStub;
-import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.IOptimizeSolution;
-import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl.OptimizeSolutionStub;
-import at.ac.tuwien.otl.ss18.pwlk.reader.ProblemReader;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
-import at.ac.tuwien.otl.ss18.pwlk.verifier.SolutionVerifier;
-import at.ac.tuwien.otl.ss18.pwlk.writer.SolutionWriter;
-
-import java.io.File;
-import java.io.IOException;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwInitializeException;
+import org.apache.commons.cli.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
+  private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-  public static void main(String[] args) throws IOException {
-    final String instanceDirectory = "instances/";
-    final String instanceFile = "r102C10";
+  public static void main(String[] args) {
+    CommandLine cmd = parseArguments(args);
+    final Evrptw evrptw;
+    try {
+      evrptw = Evrptw.build(cmd);
+    } catch (EvrptwInitializeException e) {
+      logger.error("Could not initialize EVRPTW instance: " + e);
+      return;
+    }
+    evrptw.evrptwRun();
 
-    // Read problem from file
-    final ProblemReader problemReader = new ProblemReader(instanceDirectory + instanceFile + ".txt");
-    final ProblemInstance instance = problemReader.retrieveProblemInstance();
+    System.exit(0);
+  }
 
-    // Construct solution with construction heuristic
-    IConstructSolution constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
-    final SolutionInstance solutionInstance = constructSolution.constructSolution(instance);
+  private static CommandLine parseArguments(String[] args) {
+    CommandLine cmd = null;
 
-    // Optimize solution with metaheuristic
-    IOptimizeSolution optimizeSolution = new OptimizeSolutionStub(); // choose algorithm to optimize routes
-    final SolutionInstance optimizedSolution = optimizeSolution.optimizeSolution(solutionInstance);
+    Options options = new Options();
+    Option help = new Option( "h", "help", false, "print this message" );
+    Option input = new Option("t", "timeout", true, "timeout for algorithm");
+    Option file = new Option("f", "file", true, "specify file for input problem");
 
-    final String tempSolutionFile = File.createTempFile(instanceFile +".solution", ".tmp").getAbsolutePath();
+    options.addOption(help);
+    options.addOption(input);
+    options.addOption(file);
 
-    // Write solution to problem to file
-    final SolutionWriter solutionWriter = new SolutionWriter(tempSolutionFile, instanceFile);
-    solutionWriter.write(optimizedSolution);
+    try {
+      cmd = new DefaultParser().parse(options, args, false);
+    } catch (ParseException e) {
+      System.out.println(e.getMessage() + "\n");
+      new HelpFormatter().printHelp("java -jar <name>", options, true);
+      System.exit(0);
+    }
 
-    // Verify solution with the given verifier java program
-    final SolutionVerifier solutionVerifier = new SolutionVerifier();
-    solutionVerifier.verify(instanceDirectory + instanceFile + ".txt", tempSolutionFile);
+    if (cmd.hasOption("help")) {
+      new HelpFormatter().printHelp("java -jar <name>", options, true);
+      System.exit(0);
+    }
+
+    return cmd;
   }
 }

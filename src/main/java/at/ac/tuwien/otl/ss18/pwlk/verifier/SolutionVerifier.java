@@ -14,31 +14,27 @@ public class SolutionVerifier {
 
   private String jarPath;
 
-  public SolutionVerifier() {
-    try {
-      InputStream verifierExecutable = this.getClass().getClassLoader().getResourceAsStream("verifier/evrptw-verifier-0.2.0.jar.verify");
-      Path jarDestination = File.createTempFile("verifier", ".jar").toPath();
-      Files.copy(verifierExecutable, jarDestination, StandardCopyOption.REPLACE_EXISTING);
+  public static SolutionVerifier build() throws IOException {
+    Path jarDestination = File.createTempFile("verifier", ".jar").toPath();
+    SolutionVerifier solutionVerifier = new SolutionVerifier(jarDestination.toString());
+    InputStream verifierExecutable = solutionVerifier.getClass().getClassLoader().getResourceAsStream("verifier/evrptw-verifier-0.2.0.jar.verify");
+    Files.copy(verifierExecutable, jarDestination, StandardCopyOption.REPLACE_EXISTING);
 
-      jarPath = jarDestination.toString();
+    return solutionVerifier;
+  }
 
-    } catch (IOException i) {
-      logger.error("Exception occured while loading verifier: " + i);
-    }
+  private SolutionVerifier(String jarPath) {
+    this.jarPath = jarPath;
   }
 
   public void verify(String pathToProblem, String pathToSolution) {
     try {
-      InputStream problemInstance = this.getClass().getClassLoader().getResourceAsStream(pathToProblem);
-      Path problemDestination = File.createTempFile("problem", ".txt").toPath();
-      Files.copy(problemInstance, problemDestination, StandardCopyOption.REPLACE_EXISTING);
-
       Process proc = Runtime.getRuntime().exec("java -jar "
               + jarPath
               + " "
               + "-d"
               + " "
-              + problemDestination.toString()
+              + pathToProblem
               + " "
               + pathToSolution);
 

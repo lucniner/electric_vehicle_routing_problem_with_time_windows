@@ -33,7 +33,7 @@ repositories {
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     compile 'com.google.guava:guava:23.0'
-
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
     compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
 
 

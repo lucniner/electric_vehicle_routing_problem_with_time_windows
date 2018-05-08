@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.LinkedList;
@@ -35,7 +36,7 @@ public class ProblemReader {
     try (BufferedReader reader =
                  new BufferedReader(
                          new InputStreamReader(
-                                 this.getClass().getClassLoader().getResourceAsStream(instanceFilePath)))) {
+                                 new FileInputStream(instanceFilePath)))) {
       reader.readLine(); // skip header
       parseNodes(reader);
       parseConstraints(reader);
