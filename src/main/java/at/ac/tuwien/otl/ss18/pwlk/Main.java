@@ -3,7 +3,7 @@ package at.ac.tuwien.otl.ss18.pwlk;
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl.ConstructSolutionStub;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.IOptimizeSolution;
-import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.OptimizeSolutionStub;
+import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl.OptimizeSolutionStub;
 import at.ac.tuwien.otl.ss18.pwlk.reader.ProblemReader;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
