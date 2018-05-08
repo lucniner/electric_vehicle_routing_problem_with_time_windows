@@ -15,16 +15,24 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
 public class Main {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private static final String instanceDirectory = "instances/";
-  private static final String instanceFile = "r102C10";
+
+  // default instance path, can be overwritten with -f
+  private static String instancePath = "instances/r102C10.txt";
 
   // timeout of 0 means no timeout
-  private int timeout = 0;
+  private static int timeout = 0;
+  // solution verifier as jar program in tmp directory
+  private static SolutionVerifier solutionVerifier;
+
 
   public static void main(String[] args) {
     CommandLine cmd = parseArguments(args);
@@ -33,12 +41,28 @@ public class Main {
   }
 
   private void execute(CommandLine cmd) {
-    if (cmd.hasOption("timeout")) {
-      timeout = Integer.parseInt(cmd.getOptionValue("timeout"));
+    try {
+      solutionVerifier = SolutionVerifier.build();
+    } catch (IOException e) {
+      logger.error("Exception occured while loading verifier: " + e);
+      return;
+    }
+
+    final String problemInstance;
+
+    try {
+      if (cmd.hasOption("file")) {
+        problemInstance = cmd.getOptionValue("file");
+      } else {
+        problemInstance = loadProblemFile(instancePath);
+      }
+    } catch (IOException e) {
+      logger.error("Could not load problem instance: " + e);
+      return;
     }
 
     // Read problem from file
-    final ProblemReader problemReader = new ProblemReader(instanceDirectory + instanceFile + ".txt");
+    final ProblemReader problemReader = new ProblemReader(problemInstance);
 
     final ProblemInstance instance;
 
@@ -48,6 +72,7 @@ public class Main {
       logger.error("Could not retrieve problem instance: " + e);
       return;
     }
+
 
     // Construct solution with construction heuristic
     IConstructSolution constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
@@ -65,7 +90,9 @@ public class Main {
     final String tempSolutionFile;
 
     try {
-      tempSolutionFile = File.createTempFile(instanceFile +".solution", ".tmp").getAbsolutePath();
+      tempSolutionFile = File.createTempFile(
+              problemInstance.substring(problemInstance.lastIndexOf("/")+1,
+                      problemInstance.lastIndexOf("_")) +".solution", ".tmp").getAbsolutePath();
     } catch (IOException e) {
       logger.error("Could not create temporary file to save solution " + e);
       return;
@@ -77,12 +104,14 @@ public class Main {
     }
 
     // Write solution to problem to file
-    final SolutionWriter solutionWriter = new SolutionWriter(tempSolutionFile, instanceFile);
+    final SolutionWriter solutionWriter = new SolutionWriter(
+            tempSolutionFile,
+            problemInstance.substring(problemInstance.lastIndexOf("/")+1,
+                    problemInstance.lastIndexOf("_")));
     solutionWriter.write(optimizedSolution.get());
 
     // Verify solution with the given verifier java program
-    final SolutionVerifier solutionVerifier = new SolutionVerifier();
-    solutionVerifier.verify(instanceDirectory + instanceFile + ".txt", tempSolutionFile);
+    solutionVerifier.verify(problemInstance, tempSolutionFile);
   }
 
   private static CommandLine parseArguments(String[] args) {
@@ -90,10 +119,12 @@ public class Main {
 
     Options options = new Options();
     Option help = new Option( "h", "help", false, "print this message" );
-    Option input = new Option("t", "timeout", true, "Timeout for algorithm");
+    Option input = new Option("t", "timeout", true, "timeout for algorithm");
+    Option file = new Option("f", "file", true, "specify file for input problem");
 
     options.addOption(help);
     options.addOption(input);
+    options.addOption(file);
 
     try {
       cmd = new DefaultParser().parse(options, args, false);
@@ -108,6 +139,20 @@ public class Main {
       System.exit(0);
     }
 
+    if (cmd.hasOption("timeout")) {
+      timeout = Integer.parseInt(cmd.getOptionValue("timeout"));
+    }
+
     return cmd;
+  }
+
+  private String loadProblemFile(String pathToProblem) throws IOException {
+    InputStream problemInstance = this.getClass().getClassLoader().getResourceAsStream(pathToProblem);
+    Path problemDestination = File.createTempFile(
+            pathToProblem.substring(pathToProblem.lastIndexOf("/"),
+                    pathToProblem.length()-4) + "_", ".txt").toPath();
+    Files.copy(problemInstance, problemDestination, StandardCopyOption.REPLACE_EXISTING);
+
+    return problemDestination.toString();
   }
 }
