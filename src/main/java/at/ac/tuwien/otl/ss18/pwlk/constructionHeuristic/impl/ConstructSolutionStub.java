@@ -1,6 +1,5 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
-import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceCalculator;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 import org.slf4j.Logger;
@@ -8,16 +7,19 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Optional;
 
-public class ConstructSolutionStub implements IConstructSolution {
+public class ConstructSolutionStub extends AbstractConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  @Override
+  public Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout) {
+    logger.info("Construct solution with algorithm 'Stub'");
+    return super.constructSolution(problemInstance, timeout);
+  }
 
   @Override
-  public SolutionInstance constructSolution(ProblemInstance problemInstance) {
-    logger.info("Construct solution with algorithm 'Stub'");
-    //TODO delete this stub code and implement algorithm
-    //Currently it create one route per customer and doesn't use the fuel station
+  Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) {
     SolutionInstance solutionInstance = new SolutionInstance();
     ArrayList<Route> list = new ArrayList<>();
 
@@ -34,6 +36,6 @@ public class ConstructSolutionStub implements IConstructSolution {
     }
     solutionInstance.setRoutes(list);
 
-    return solutionInstance;
+    return Optional.of(solutionInstance);
   }
 }
