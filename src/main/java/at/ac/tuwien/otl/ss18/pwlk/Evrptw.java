@@ -148,7 +148,7 @@ public class Evrptw {
   public void evrptwRun() {
     Report report = new Report(optimize);
     report.setConstructAlgorithmName(constructSolution.getClass().getSimpleName());
-    report.setOptimizeAlgorithmName(constructSolution.getClass().getSimpleName());
+    report.setOptimizeAlgorithmName(optimizeSolution.getClass().getSimpleName());
 
     for(String instancePath : problemInstances.keySet()) {
       InstanceReport instanceReport = runInstance(instancePath, problemInstances.get(instancePath));
@@ -173,6 +173,7 @@ public class Evrptw {
       Instant end = Instant.now();
 
       logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+      instanceReport.addSolutionInstances(solutionInstance);
 
       if (!solutionInstance.isPresent()) {
         logger.info("Could not create solution within the time limit");
@@ -191,6 +192,8 @@ public class Evrptw {
 
     if (optimize) {
 
+      logger.info("Enter optimization stage with solution of distance " + solutionInstance.get().getDistanceSum());
+
       for (int i = 0; i < nbOptimize; i++) {
         // Optimize solution with metaheuristic
         Instant begin = Instant.now();
@@ -198,6 +201,7 @@ public class Evrptw {
         Instant end = Instant.now();
 
         logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+        instanceReport.addOptimizedInstances(optimizedSolution);
 
         if (!optimizedSolution.isPresent()) {
           logger.info("Could not create optimized solution within the time limit");
