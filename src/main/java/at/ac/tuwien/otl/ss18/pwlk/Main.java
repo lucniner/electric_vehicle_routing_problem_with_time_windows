@@ -27,7 +27,7 @@ public class Main {
 
     Options options = new Options();
     Option help = new Option( "h", "help", false, "print this message" );
-    Option input = new Option("t", "timeout", true, "timeout for algorithm");
+    Option input = new Option("t", "timeout", true, "timeout for algorithm in seconds");
     Option file = new Option("f", "file", true, "specify file for input problem");
 
     options.addOption(help);

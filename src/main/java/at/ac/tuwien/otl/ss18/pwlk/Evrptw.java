@@ -101,9 +101,11 @@ public class Evrptw {
     final String tempSolutionFile;
 
     try {
-      tempSolutionFile = File.createTempFile(
+      File tempSolution = File.createTempFile(
               instancePath.substring(instancePath.lastIndexOf("/")+1,
-                      instancePath.lastIndexOf("_")) +".solution", ".tmp").getAbsolutePath();
+                      instancePath.lastIndexOf("_")) +".solution", ".tmp");
+      tempSolution.deleteOnExit();
+      tempSolutionFile = tempSolution.getAbsolutePath();
     } catch (IOException e) {
       logger.error("Could not create temporary file to save solution " + e);
       return;
@@ -128,9 +130,11 @@ public class Evrptw {
 
   private static String loadProblemFile(String pathToProblem) throws IOException {
     InputStream problemInstance = Evrptw.class.getClassLoader().getResourceAsStream(pathToProblem);
-    Path problemDestination = File.createTempFile(
+    File problemFile = File.createTempFile(
             pathToProblem.substring(pathToProblem.lastIndexOf("/"),
-                    pathToProblem.length()-4) + "_", ".txt").toPath();
+                    pathToProblem.length()-4) + "_", ".txt");
+    problemFile.deleteOnExit();
+    Path problemDestination = problemFile.toPath();
     Files.copy(problemInstance, problemDestination, StandardCopyOption.REPLACE_EXISTING);
 
     return problemDestination.toString();

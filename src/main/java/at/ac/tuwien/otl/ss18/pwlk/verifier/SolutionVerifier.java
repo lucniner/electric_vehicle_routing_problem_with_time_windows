@@ -15,7 +15,9 @@ public class SolutionVerifier {
   private String jarPath;
 
   public static SolutionVerifier build() throws IOException {
-    Path jarDestination = File.createTempFile("verifier", ".jar").toPath();
+    File jarFile = File.createTempFile("verifier", ".jar");
+    jarFile.deleteOnExit();
+    Path jarDestination = jarFile.toPath();
     SolutionVerifier solutionVerifier = new SolutionVerifier(jarDestination.toString());
     InputStream verifierExecutable = solutionVerifier.getClass().getClassLoader().getResourceAsStream("verifier/evrptw-verifier-0.2.0.jar.verify");
     Files.copy(verifierExecutable, jarDestination, StandardCopyOption.REPLACE_EXISTING);
