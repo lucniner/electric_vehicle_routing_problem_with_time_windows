@@ -192,6 +192,8 @@ public class Evrptw {
 
     if (optimize) {
 
+      logger.info("Enter optimization stage with solution of distance " + solutionInstance.get().getDistanceSum());
+
       for (int i = 0; i < nbOptimize; i++) {
         // Optimize solution with metaheuristic
         Instant begin = Instant.now();

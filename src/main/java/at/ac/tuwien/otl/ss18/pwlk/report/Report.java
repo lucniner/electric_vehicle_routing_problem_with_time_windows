@@ -65,9 +65,10 @@ public class Report {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("\n");
-    sb.append("\n|               | Construction algorithm " + formatAlgorithmName(constructAlgorithmName) + "|");
-    sb.append("\n|               |----------------------------------------------------------------------|");
-    sb.append("\n|               | Runtime [seconds]           | Distance                    |          |");
+    sb.append("\n                | Construction algorithm " + formatAlgorithmName(constructAlgorithmName) + "|");
+    sb.append("\n                |----------------------------------------------------------------------|");
+    sb.append("\n                | Runtime [seconds]           | Distance                    |          |");
+    sb.append("\n|---------------|-----------------------------|-----------------------------|----------|");
     sb.append("\n| Instance name | Min     | Max     | Avg     | Min     | Max     | Avg     | #SuccRun |");
     sb.append("\n|--------------------------------------------------------------------------------------|");
 
@@ -95,9 +96,10 @@ public class Report {
     if (isOptmizied) {
       sb.append("\n");
       sb.append("\n");
-      sb.append("\n|               | Optimization algorithm " + formatAlgorithmName(optimizeAlgorithmName) + "|");
-      sb.append("\n|               |----------------------------------------------------------------------|");
-      sb.append("\n|               | Runtime [seconds]           | Distance                    |          |");
+      sb.append("\n                | Optimization algorithm " + formatAlgorithmName(optimizeAlgorithmName) + "|");
+      sb.append("\n                |----------------------------------------------------------------------|");
+      sb.append("\n                | Runtime [seconds]           | Distance                    |          |");
+      sb.append("\n|---------------|-----------------------------|-----------------------------|----------|");
       sb.append("\n| Instance name | Min     | Max     | Avg     | Min     | Max     | Avg     | #SuccRun |");
       sb.append("\n|--------------------------------------------------------------------------------------|");
 
