@@ -14,7 +14,7 @@ public class Main {
     try {
       evrptw = Evrptw.build(cmd);
     } catch (EvrptwInitializeException e) {
-      logger.error("Could not initialize EVRPTW instance: " + e);
+      logger.error("Could not initialize EVRPTW instance: " + e.getLocalizedMessage());
       return;
     }
     evrptw.evrptwRun();
@@ -28,19 +28,19 @@ public class Main {
     Options options = new Options();
     Option help = new Option( "h", "help", false, "print this message" );
     Option timeout = new Option("t", "timeout", true, "timeout for algorithm in seconds");
-    Option file = new Option("f", "file", true, "specify file for input problem");
+    Option file = new Option("f", "file", true, "load instance from given file");
     Option directory = new Option("d", "directory", true, "load all instances from given directory");
-    Option runNumberConstract = new Option("nc", "runNumberConstruct", true, "Specify # of times to run construction algorithm");
-    Option runNumberOptimize = new Option("no", "runNumberOptimize", true, "Specify # of times to run optimization algorithm");
     Option optimize = new Option("o", "optimize", false, "Specify if optimization algorithm should run (default=no)");
+    Option runNumberConstruct = new Option("nc", "runNumberConstruct", true, "Specify # of times to run construction algorithm (default=1)");
+    Option runNumberOptimize = new Option("no", "runNumberOptimize", true, "Specify # of times to run optimization algorithm (default=1");
 
     options.addOption(help);
     options.addOption(timeout);
     options.addOption(file);
     options.addOption(directory);
-    options.addOption(runNumberConstract);
-    options.addOption(runNumberOptimize);
     options.addOption(optimize);
+    options.addOption(runNumberConstruct);
+    options.addOption(runNumberOptimize);
 
     try {
       cmd = new DefaultParser().parse(options, args, false);

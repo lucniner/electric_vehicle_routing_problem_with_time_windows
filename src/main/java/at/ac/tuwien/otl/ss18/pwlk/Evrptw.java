@@ -32,16 +32,16 @@ public class Evrptw {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
-  // default instance path, can be overwritten with -f
+  // default instance path, can be overwritten with -f or -d
   private static String instanceDirectory = "instances/";
   private static String instanceName = "r102C10.txt";
 
   // timeout of 0 means no timeout
   private int timeout;
   // number of times construct or optimize algorithm should run (1 is default)
-  private int nbConstruct = 1;
-  private int nbOptimize = 1;
-  private boolean optimize = false; // should optimization algorithm run?
+  private int nbConstruct;
+  private int nbOptimize;
+  private boolean optimize; // should optimization algorithm run?
   // solution verifier as jar program in tmp directory
   private SolutionVerifier solutionVerifier;
 
@@ -61,14 +61,26 @@ public class Evrptw {
 
     if (cmd.hasOption("timeout")) {
       timeout = Integer.parseInt(cmd.getOptionValue("timeout"));
+
+      if (timeout < 1) {
+        throw new EvrptwInitializeException("Timeout for algorithms must be greater than 0");
+      }
     }
 
     if (cmd.hasOption("runNumberConstruct")) {
       nbConstruct = Integer.parseInt(cmd.getOptionValue("runNumberConstruct"));
+
+      if(nbConstruct < 1) {
+        throw new EvrptwInitializeException("number of iterations of the construction algorithm must be greater than 0");
+      }
     }
 
     if (cmd.hasOption("runNumberOptimize")) {
       nbOptimize = Integer.parseInt(cmd.getOptionValue("runNumberOptimize"));
+
+      if(nbOptimize < 1) {
+        throw new EvrptwInitializeException("number of iterations of the optimization algorithm must be greater than 0");
+      }
     }
 
     if (cmd.hasOption("optimize")) {
