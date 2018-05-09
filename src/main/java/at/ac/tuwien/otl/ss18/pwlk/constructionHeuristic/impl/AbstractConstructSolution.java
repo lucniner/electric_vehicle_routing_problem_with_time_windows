@@ -23,8 +23,6 @@ public abstract class AbstractConstructSolution implements IConstructSolution {
 
     Optional<SolutionInstance> solutionInstance = Optional.empty();
 
-    Instant begin = Instant.now();
-
     try {
       if (timeout != 0) {
         solutionInstance = limiter.callWithTimeout(() -> runAlgorithm(problemInstance), timeout, TimeUnit.SECONDS);
@@ -38,9 +36,6 @@ public abstract class AbstractConstructSolution implements IConstructSolution {
       logger.info("Finishing algorithm within time limit of " + timeout  + " " + TimeUnit.SECONDS.name() + " was not possible");
     }
 
-    Instant end = Instant.now();
-
-    logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
     return solutionInstance;
   }
 

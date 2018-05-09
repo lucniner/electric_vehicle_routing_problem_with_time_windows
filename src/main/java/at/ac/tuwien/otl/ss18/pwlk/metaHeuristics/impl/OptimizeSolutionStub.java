@@ -10,13 +10,10 @@ public class OptimizeSolutionStub extends AbstractOptimizeSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public Optional<SolutionInstance> optimizeSolution(SolutionInstance solutionInstance, int timeout) {
-    logger.info("Optimize solution with algorithm 'Stub'");
-    return super.optimizeSolution(solutionInstance, timeout);
-  }
-
-  @Override
   Optional<SolutionInstance> runAlgorithm(SolutionInstance solutionInstance) {
+    logger.info("Optimize solution with algorithm 'Stub'");
+    //TODO richtigen algorithmus implementieren
+    try {Thread.sleep(4000);}catch (InterruptedException e){}
     return Optional.of(solutionInstance);
   }
 }
