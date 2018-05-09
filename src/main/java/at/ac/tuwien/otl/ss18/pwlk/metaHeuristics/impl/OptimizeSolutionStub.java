@@ -13,6 +13,7 @@ public class OptimizeSolutionStub extends AbstractOptimizeSolution {
   Optional<SolutionInstance> runAlgorithm(SolutionInstance solutionInstance) {
     logger.info("Optimize solution with algorithm 'Stub'");
     //TODO richtigen algorithmus implementieren
+    try {Thread.sleep(4000);}catch (InterruptedException e){}
     return Optional.of(solutionInstance);
   }
 }

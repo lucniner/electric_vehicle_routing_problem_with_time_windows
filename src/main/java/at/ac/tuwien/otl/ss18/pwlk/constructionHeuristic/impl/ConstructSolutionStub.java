@@ -33,7 +33,7 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
     solutionInstance.setRoutes(list);
 
     try {
-      Thread.sleep(3000);
+      Thread.sleep(2000);
     } catch (InterruptedException i) {}
 
     return Optional.of(solutionInstance);

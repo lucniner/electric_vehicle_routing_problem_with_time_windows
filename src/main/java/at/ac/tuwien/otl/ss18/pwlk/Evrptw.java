@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -38,20 +37,42 @@ public class Evrptw {
   private static String instanceName = "r102C10.txt";
 
   // timeout of 0 means no timeout
-  private int timeout = 0;
+  private int timeout;
+  // number of times construct or optimize algorithm should run (1 is default)
+  private int nbConstruct = 1;
+  private int nbOptimize = 1;
+  private boolean optimize = false; // should optimization algorithm run?
   // solution verifier as jar program in tmp directory
   private SolutionVerifier solutionVerifier;
+
+  private IConstructSolution constructSolution;
+  private IOptimizeSolution optimizeSolution;
 
   private Map<String, ProblemInstance> problemInstances;
 
   public static Evrptw build(CommandLine cmd) throws EvrptwInitializeException {
     int timeout = 0;
+    boolean optimize = false;
+    int nbConstruct = 1;
+    int nbOptimize = 1;
     SolutionVerifier solutionVerifier;
     String problemInstance;
     Map<String, ProblemInstance> problemInstances = new HashMap<>();
 
     if (cmd.hasOption("timeout")) {
       timeout = Integer.parseInt(cmd.getOptionValue("timeout"));
+    }
+
+    if (cmd.hasOption("runNumberConstruct")) {
+      nbConstruct = Integer.parseInt(cmd.getOptionValue("runNumberConstruct"));
+    }
+
+    if (cmd.hasOption("runNumberOptimize")) {
+      nbOptimize = Integer.parseInt(cmd.getOptionValue("runNumberOptimize"));
+    }
+
+    if (cmd.hasOption("optimize")) {
+      optimize = true;
     }
 
     if (!cmd.hasOption("directory")) {
@@ -91,73 +112,97 @@ public class Evrptw {
       throw new EvrptwInitializeException("Exception while loading solution verifier: " + e);
     }
 
-    return new Evrptw(timeout, solutionVerifier, problemInstances);
+    return new Evrptw(timeout, solutionVerifier, problemInstances, optimize, nbConstruct, nbOptimize);
   }
 
-  private Evrptw(int timeout, SolutionVerifier solutionVerifier, Map<String, ProblemInstance> problemInstances) {
+  private Evrptw(int timeout,
+                 SolutionVerifier solutionVerifier,
+                 Map<String, ProblemInstance> problemInstances,
+                 boolean optimize,
+                 int nbConstruct,
+                 int nbOptimize) {
+
     this.problemInstances = new HashMap<>();
     this.timeout = timeout;
     this.solutionVerifier = solutionVerifier;
     this.problemInstances = problemInstances;
+    this.constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
+    this.optimizeSolution = new OptimizeSolutionStub(); // choose algorithm to optimize routes
+    this.optimize = optimize;
+    this.nbConstruct = nbConstruct;
+    this.nbOptimize = nbOptimize;
   }
 
   public void evrptwRun() {
-    IConstructSolution constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
-    IOptimizeSolution optimizeSolution = new OptimizeSolutionStub(); // choose algorithm to optimize routes
-    //TODO noch so machen dass nicht alles so oft ausgeführt wird
-    Report report = new Report();
+    Report report = new Report(optimize);
     report.setConstructAlgorithmName(constructSolution.getClass().getSimpleName());
     report.setOptimizeAlgorithmName(constructSolution.getClass().getSimpleName());
 
     for(String instancePath : problemInstances.keySet()) {
-      InstanceReport instanceReport = runInstance(instancePath,
-              problemInstances.get(instancePath),
-              constructSolution,
-              optimizeSolution);
-
+      InstanceReport instanceReport = runInstance(instancePath, problemInstances.get(instancePath));
       report.setInstanceReport(instanceReport);
     }
 
     logger.info(report.toString());
   }
 
-  private InstanceReport runInstance(String instancePath,
-                                     ProblemInstance problemInstance,
-                                     IConstructSolution constructSolution,
-                                     IOptimizeSolution optimizeSolution) {
+  private InstanceReport runInstance(String instancePath, ProblemInstance problemInstance) {
 
     String instanceName = instancePath.substring(instancePath.lastIndexOf("/")+1, instancePath.lastIndexOf("_"));
 
     InstanceReport instanceReport = new InstanceReport(instanceName);
 
-    // Construct solution with construction heuristic
-    Instant begin = Instant.now();
-    final Optional<SolutionInstance> solutionInstance = constructSolution.constructSolution(problemInstance, timeout);
-    Instant end = Instant.now();
+    Optional<SolutionInstance> solutionInstance = Optional.empty();
 
-    logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+    for(int i = 0; i<nbConstruct; i++) {
+      // Construct solution with construction heuristic
+      Instant begin = Instant.now();
+      solutionInstance = constructSolution.constructSolution(problemInstance, timeout);
+      Instant end = Instant.now();
+
+      logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+
+      if (!solutionInstance.isPresent()) {
+        logger.info("Could not create solution within the time limit");
+        instanceReport.addRunTimeConstruct(OptionalInt.empty());
+      } else {
+        instanceReport.addRunTimeConstruct(OptionalInt.of(toIntExact(end.getEpochSecond() - begin.getEpochSecond())));
+      }
+    }
 
     if (!solutionInstance.isPresent()) {
-      logger.info("Could not create solution within the time limit");
-      instanceReport.addRunTimeConstruct(OptionalInt.empty());
+      logger.info("Cannot proceed with optimizing solution because there is not start solution");
       return instanceReport;
     }
-    instanceReport.addRunTimeConstruct(OptionalInt.of(toIntExact(end.getEpochSecond() - begin.getEpochSecond())));
 
+    Optional<SolutionInstance> optimizedSolution = Optional.empty();
 
-    // Optimize solution with metaheuristic
-    begin = Instant.now();
-    final Optional<SolutionInstance> optimizedSolution = optimizeSolution.optimizeSolution(solutionInstance.get(), timeout);
-    end = Instant.now();
+    if (optimize) {
 
-    logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+      for (int i = 0; i < nbOptimize; i++) {
+        // Optimize solution with metaheuristic
+        Instant begin = Instant.now();
+        optimizedSolution = optimizeSolution.optimizeSolution(solutionInstance.get(), timeout);
+        Instant end = Instant.now();
+
+        logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+
+        if (!optimizedSolution.isPresent()) {
+          logger.info("Could not create optimized solution within the time limit");
+          instanceReport.addRunTimeOptimize(OptionalInt.empty());
+        } else {
+          instanceReport.addRunTimeOptimize(OptionalInt.of(toIntExact(end.getEpochSecond() - begin.getEpochSecond())));
+        }
+      }
+    } else {
+      optimizedSolution = solutionInstance;
+    }
 
     if (!optimizedSolution.isPresent()) {
-      logger.info("Could not create optimized solution within the time limit");
-      instanceReport.addRunTimeOptimize(OptionalInt.empty());
+      logger.info("Cannot check for valid solution because there is no solution available");
+      logger.info("Note: Check for invalid solutions are only made for the last run");
       return instanceReport;
     }
-    instanceReport.addRunTimeOptimize(OptionalInt.of(toIntExact(end.getEpochSecond() - begin.getEpochSecond())));
 
     final String tempSolutionFile;
 

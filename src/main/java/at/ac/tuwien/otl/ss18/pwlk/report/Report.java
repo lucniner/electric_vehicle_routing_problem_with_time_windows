@@ -1,11 +1,14 @@
 package at.ac.tuwien.otl.ss18.pwlk.report;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 public class Report {
+  private boolean isOptmizied;
+
   private String constructAlgorithmName;
   private int numberOfRunsConstruct;
 
@@ -13,6 +16,10 @@ public class Report {
   private int numberOfRunsOptimize;
 
   private List<InstanceReport> instanceReports = new ArrayList<>();
+
+  public Report(boolean isOptimized) {
+    this.isOptmizied = isOptimized;
+  }
 
   public String getConstructAlgorithmName() {
     return constructAlgorithmName;
@@ -57,11 +64,23 @@ public class Report {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("\n|");
-    sb.append("\n|               | Construction algorithm                 | Optimization algorithm                 |");
-    sb.append("\n|               | " + formatAlgorithmName(constructAlgorithmName) + "| " + formatAlgorithmName(optimizeAlgorithmName) + "|");
-    sb.append("\n| Instance name | Min [s] | Max [s] | Avg [s] | #SuccRun | Min [s] | Max [s] | Avg [s] | #SuccRun |");
-    sb.append("\n|-------------------------------------------------------------------------------------------------|");
+    sb.append("\n\n|               | Construction algorithm                 |");
+    if (isOptmizied) {
+      sb.append(" Optimization algorithm                 |");
+    }
+    sb.append("\n|               | " + formatAlgorithmName(constructAlgorithmName) + "|");
+    if (isOptmizied) {
+      sb.append(" " + formatAlgorithmName(optimizeAlgorithmName) + "|");
+    }
+    sb.append("\n| Instance name | Min [s] | Max [s] | Avg [s] | #SuccRun |");
+    if (isOptmizied) {
+      sb.append(" Min [s] | Max [s] | Avg [s] | #SuccRun |");
+    }
+    if (!isOptmizied) {
+     sb.append("\n|--------------------------------------------------------|" );
+    } else {
+      sb.append("\n|-------------------------------------------------------------------------------------------------|");
+    }
 
     for (InstanceReport instanceReport: instanceReports) {
       sb.append("\n| "
@@ -73,16 +92,19 @@ public class Report {
               + "|"
               + formatNumber(instanceReport.getAverageTimeConstruct())
               + "|"
-              + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsConstruct(), instanceReport.getNumberOfRunsConstruct())
-              + "|"
-              + formatNumber(instanceReport.getMinRunTimeOptimize())
-              + "|"
-              + formatNumber(instanceReport.getMaxRunTimeOptimize())
-              + "|"
-              + formatNumber(instanceReport.getAverageTimeOptimize())
-              + "|"
-              + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsOptimize(), instanceReport.getNumberOfRunsOptimize())
-              + "|");
+              + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsConstruct(), instanceReport.getNumberOfRunsConstruct()));
+
+      if(isOptmizied) {
+        sb.append("|"
+                + formatNumber(instanceReport.getMinRunTimeOptimize())
+                + "|"
+                + formatNumber(instanceReport.getMaxRunTimeOptimize())
+                + "|"
+                + formatNumber(instanceReport.getAverageTimeOptimize())
+                + "|"
+                + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsOptimize(), instanceReport.getNumberOfRunsOptimize())
+                + "|");
+      }
     }
 
     return sb.toString();
@@ -93,7 +115,8 @@ public class Report {
   }
 
   private String formatNumber(OptionalDouble number) {
-    return String.format("%1$" + 9 + "s", (number.isPresent() ? number.getAsDouble() : "N"));
+    DecimalFormat formatter = new DecimalFormat("#0.00");
+    return String.format("%1$" + 9 + "s", (number.isPresent() ? formatter.format(number.getAsDouble()) : "N"));
   }
 
   private String formatAlgorithmName(String name) {
