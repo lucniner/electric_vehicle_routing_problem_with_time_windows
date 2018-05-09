@@ -22,8 +22,6 @@ public abstract class AbstractOptimizeSolution implements IOptimizeSolution {
 
     Optional<SolutionInstance> optimizedSolutionInstance = Optional.empty();
 
-    Instant begin = Instant.now();
-
     try {
       if (timeout != 0) {
         optimizedSolutionInstance = limiter.callWithTimeout(() -> runAlgorithm(solutionInstance), timeout, TimeUnit.SECONDS);
@@ -37,9 +35,6 @@ public abstract class AbstractOptimizeSolution implements IOptimizeSolution {
       logger.info("Finishing algorithm within time limit of " + timeout  + " " + TimeUnit.SECONDS.name() + " was not possible");
     }
 
-    Instant end = Instant.now();
-
-    logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
     return optimizedSolutionInstance;
   }
 

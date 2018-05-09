@@ -29,10 +29,12 @@ public class Main {
     Option help = new Option( "h", "help", false, "print this message" );
     Option input = new Option("t", "timeout", true, "timeout for algorithm in seconds");
     Option file = new Option("f", "file", true, "specify file for input problem");
+    Option directory = new Option("d", "directory", true, "load all instances from given directory");
 
     options.addOption(help);
     options.addOption(input);
     options.addOption(file);
+    options.addOption(directory);
 
     try {
       cmd = new DefaultParser().parse(options, args, false);

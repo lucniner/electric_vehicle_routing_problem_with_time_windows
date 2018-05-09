@@ -13,13 +13,8 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout) {
-    logger.info("Construct solution with algorithm 'Stub'");
-    return super.constructSolution(problemInstance, timeout);
-  }
-
-  @Override
   Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) {
+    logger.info("Construct solution with algorithm 'Stub'");
     SolutionInstance solutionInstance = new SolutionInstance();
     ArrayList<Route> list = new ArrayList<>();
 
@@ -36,6 +31,10 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
       list.add(route);
     }
     solutionInstance.setRoutes(list);
+
+    try {
+      Thread.sleep(3000);
+    } catch (InterruptedException i) {}
 
     return Optional.of(solutionInstance);
   }

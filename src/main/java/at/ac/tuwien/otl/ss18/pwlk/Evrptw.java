@@ -6,6 +6,8 @@ import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwInitializeException;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.IOptimizeSolution;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl.OptimizeSolutionStub;
 import at.ac.tuwien.otl.ss18.pwlk.reader.ProblemReader;
+import at.ac.tuwien.otl.ss18.pwlk.report.InstanceReport;
+import at.ac.tuwien.otl.ss18.pwlk.report.Report;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 import at.ac.tuwien.otl.ss18.pwlk.verifier.SolutionVerifier;
@@ -15,19 +17,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.*;
+
+import static java.lang.Math.toIntExact;
 
 public class Evrptw {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
   // default instance path, can be overwritten with -f
-  private static String instancePath = "instances/r102C10.txt";
+  private static String instanceDirectory = "instances/";
+  private static String instanceName = "r102C10.txt";
 
   // timeout of 0 means no timeout
   private int timeout = 0;
@@ -45,20 +53,36 @@ public class Evrptw {
     if (cmd.hasOption("timeout")) {
       timeout = Integer.parseInt(cmd.getOptionValue("timeout"));
     }
-    if (cmd.hasOption("file")) {
-      problemInstance = cmd.getOptionValue("file");
+
+    if (!cmd.hasOption("directory")) {
+      if (cmd.hasOption("file")) {
+        problemInstance = cmd.getOptionValue("file");
+        problemInstance = loadProblemFile(problemInstance, false);
+      } else {
+        problemInstance = loadProblemFile(instanceDirectory + instanceName, true);
+      }
+      try {
+        problemInstances.put(problemInstance, new ProblemReader(problemInstance).retrieveProblemInstance());
+      } catch (IOException e) {
+        throw new EvrptwInitializeException("Exception while retrieving problem instance from file: " + e);
+      }
     } else {
       try {
-        problemInstance = loadProblemFile(instancePath);
-      } catch (IOException e) {
-        throw new EvrptwInitializeException("Could not load problem instance from resource directory: " + e.getLocalizedMessage());
+        File[] files = new File(cmd.getOptionValue("directory")).listFiles();
+
+        if (files == null) {
+          throw new EvrptwInitializeException("Could not read from specified directory");
+        }
+
+        for (File file : files) {
+          if (file.isFile()) {
+            problemInstance = loadProblemFile(file.getAbsolutePath(), false);
+            problemInstances.put(problemInstance, new ProblemReader(problemInstance).retrieveProblemInstance());
+          }
+        }
+      }catch (IOException e) {
+        throw new EvrptwInitializeException("Could not read all files from specified directory: " + e);
       }
-    }
-    final ProblemReader problemReader = new ProblemReader(problemInstance);
-    try {
-      problemInstances.put(problemInstance, problemReader.retrieveProblemInstance());
-    } catch (IOException e) {
-      throw new EvrptwInitializeException("Exception while retrieving problem instance from file: " + e);
     }
 
     try {
@@ -77,66 +101,107 @@ public class Evrptw {
     this.problemInstances = problemInstances;
   }
 
-
   public void evrptwRun() {
+    IConstructSolution constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
+    IOptimizeSolution optimizeSolution = new OptimizeSolutionStub(); // choose algorithm to optimize routes
+    //TODO noch so machen dass nicht alles so oft ausgeführt wird
+    Report report = new Report();
+    report.setConstructAlgorithmName(constructSolution.getClass().getSimpleName());
+    report.setOptimizeAlgorithmName(constructSolution.getClass().getSimpleName());
+
     for(String instancePath : problemInstances.keySet()) {
-      runInstance(instancePath, problemInstances.get(instancePath));
+      InstanceReport instanceReport = runInstance(instancePath,
+              problemInstances.get(instancePath),
+              constructSolution,
+              optimizeSolution);
+
+      report.setInstanceReport(instanceReport);
     }
+
+    logger.info(report.toString());
   }
 
-  private void runInstance(String instancePath, ProblemInstance problemInstance) {
+  private InstanceReport runInstance(String instancePath,
+                                     ProblemInstance problemInstance,
+                                     IConstructSolution constructSolution,
+                                     IOptimizeSolution optimizeSolution) {
+
+    String instanceName = instancePath.substring(instancePath.lastIndexOf("/")+1, instancePath.lastIndexOf("_"));
+
+    InstanceReport instanceReport = new InstanceReport(instanceName);
+
     // Construct solution with construction heuristic
-    IConstructSolution constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
+    Instant begin = Instant.now();
     final Optional<SolutionInstance> solutionInstance = constructSolution.constructSolution(problemInstance, timeout);
+    Instant end = Instant.now();
+
+    logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
 
     if (!solutionInstance.isPresent()) {
       logger.info("Could not create solution within the time limit");
-      return;
+      instanceReport.addRunTimeConstruct(OptionalInt.empty());
+      return instanceReport;
     }
+    instanceReport.addRunTimeConstruct(OptionalInt.of(toIntExact(end.getEpochSecond() - begin.getEpochSecond())));
+
 
     // Optimize solution with metaheuristic
-    IOptimizeSolution optimizeSolution = new OptimizeSolutionStub(); // choose algorithm to optimize routes
+    begin = Instant.now();
     final Optional<SolutionInstance> optimizedSolution = optimizeSolution.optimizeSolution(solutionInstance.get(), timeout);
+    end = Instant.now();
+
+    logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
+
+    if (!optimizedSolution.isPresent()) {
+      logger.info("Could not create optimized solution within the time limit");
+      instanceReport.addRunTimeOptimize(OptionalInt.empty());
+      return instanceReport;
+    }
+    instanceReport.addRunTimeOptimize(OptionalInt.of(toIntExact(end.getEpochSecond() - begin.getEpochSecond())));
 
     final String tempSolutionFile;
 
     try {
       File tempSolution = File.createTempFile(
-              instancePath.substring(instancePath.lastIndexOf("/")+1,
-                      instancePath.lastIndexOf("_")) +".solution", ".tmp");
+              instanceName +".solution", ".tmp");
       tempSolution.deleteOnExit();
       tempSolutionFile = tempSolution.getAbsolutePath();
     } catch (IOException e) {
       logger.error("Could not create temporary file to save solution " + e);
-      return;
-    }
-
-    if (!optimizedSolution.isPresent()) {
-      logger.info("Could not create optimized solution within the time limit");
-      return;
+      return instanceReport;
     }
 
     // Write solution to problem to file
     final SolutionWriter solutionWriter = new SolutionWriter(
             tempSolutionFile,
-            instancePath.substring(instancePath.lastIndexOf("/")+1,
-                    instancePath.lastIndexOf("_")));
+            instanceName);
     solutionWriter.write(optimizedSolution.get());
 
     // Verify solution with the given verifier java program
     solutionVerifier.verify(instancePath, tempSolutionFile);
 
+    return instanceReport;
   }
 
-  private static String loadProblemFile(String pathToProblem) throws IOException {
-    InputStream problemInstance = Evrptw.class.getClassLoader().getResourceAsStream(pathToProblem);
-    File problemFile = File.createTempFile(
-            pathToProblem.substring(pathToProblem.lastIndexOf("/"),
-                    pathToProblem.length()-4) + "_", ".txt");
-    problemFile.deleteOnExit();
-    Path problemDestination = problemFile.toPath();
-    Files.copy(problemInstance, problemDestination, StandardCopyOption.REPLACE_EXISTING);
+  private static String loadProblemFile(String pathToProblem, boolean fromResourceDirectory) throws EvrptwInitializeException {
+    try {
+      final InputStream problemInstance;
+      if (fromResourceDirectory) {
+        problemInstance = Evrptw.class.getClassLoader().getResourceAsStream(pathToProblem);
+      } else {
+        problemInstance = new FileInputStream(pathToProblem);
+      }
 
-    return problemDestination.toString();
+      File problemFile = File.createTempFile(
+              pathToProblem.substring(pathToProblem.lastIndexOf("/"),
+                      pathToProblem.length() - 4) + "_", ".txt");
+      problemFile.deleteOnExit();
+      Path problemDestination = problemFile.toPath();
+      Files.copy(problemInstance, problemDestination, StandardCopyOption.REPLACE_EXISTING);
+
+      return problemDestination.toString();
+    } catch (IOException e) {
+      throw new EvrptwInitializeException("Could not load problem instance from resource directory: " + e.getLocalizedMessage());
+    }
   }
 }
