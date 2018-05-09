@@ -64,23 +64,12 @@ public class Report {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("\n\n|               | Construction algorithm                 |");
-    if (isOptmizied) {
-      sb.append(" Optimization algorithm                 |");
-    }
-    sb.append("\n|               | " + formatAlgorithmName(constructAlgorithmName) + "|");
-    if (isOptmizied) {
-      sb.append(" " + formatAlgorithmName(optimizeAlgorithmName) + "|");
-    }
-    sb.append("\n| Instance name | Min [s] | Max [s] | Avg [s] | #SuccRun |");
-    if (isOptmizied) {
-      sb.append(" Min [s] | Max [s] | Avg [s] | #SuccRun |");
-    }
-    if (!isOptmizied) {
-     sb.append("\n|--------------------------------------------------------|" );
-    } else {
-      sb.append("\n|-------------------------------------------------------------------------------------------------|");
-    }
+    sb.append("\n");
+    sb.append("\n|               | Construction algorithm " + formatAlgorithmName(constructAlgorithmName) + "|");
+    sb.append("\n|               |----------------------------------------------------------------------|");
+    sb.append("\n|               | Runtime [seconds]           | Distance                    |          |");
+    sb.append("\n| Instance name | Min     | Max     | Avg     | Min     | Max     | Avg     | #SuccRun |");
+    sb.append("\n|--------------------------------------------------------------------------------------|");
 
     for (InstanceReport instanceReport: instanceReports) {
       sb.append("\n| "
@@ -92,19 +81,47 @@ public class Report {
               + "|"
               + formatNumber(instanceReport.getAverageTimeConstruct())
               + "|"
-              + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsConstruct(), instanceReport.getNumberOfRunsConstruct()));
+              + formatNumber(instanceReport.getMinDistanceConstruct())
+              + "|"
+              + formatNumber(instanceReport.getMaxDistanceConstruct())
+              + "|"
+              + formatNumber(instanceReport.getAverageDistanceConstruct())
+              + "|"
+              + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsConstruct(), instanceReport.getNumberOfRunsConstruct())
+              + "|");
+    }
+    sb.append("\n|--------------------------------------------------------------------------------------|");
 
-      if(isOptmizied) {
-        sb.append("|"
+    if (isOptmizied) {
+      sb.append("\n");
+      sb.append("\n");
+      sb.append("\n|               | Optimization algorithm " + formatAlgorithmName(optimizeAlgorithmName) + "|");
+      sb.append("\n|               |----------------------------------------------------------------------|");
+      sb.append("\n|               | Runtime [seconds]           | Distance                    |          |");
+      sb.append("\n| Instance name | Min     | Max     | Avg     | Min     | Max     | Avg     | #SuccRun |");
+      sb.append("\n|--------------------------------------------------------------------------------------|");
+
+      for (InstanceReport instanceReport: instanceReports) {
+        sb.append("\n| "
+                + String.format("%1$-" + 14 + "s", instanceReport.getInstanceName())
+                + "|"
                 + formatNumber(instanceReport.getMinRunTimeOptimize())
                 + "|"
                 + formatNumber(instanceReport.getMaxRunTimeOptimize())
                 + "|"
                 + formatNumber(instanceReport.getAverageTimeOptimize())
                 + "|"
+                + formatNumber(instanceReport.getMinDistanceOptimize())
+                + "|"
+                + formatNumber(instanceReport.getMaxDistanceOptimize())
+                + "|"
+                + formatNumber(instanceReport.getAverageDistanceOptimize())
+                + "|"
                 + formatNumberOfRuns(instanceReport.getNumberOfSuccessfulRunsOptimize(), instanceReport.getNumberOfRunsOptimize())
                 + "|");
+
       }
+      sb.append("\n|--------------------------------------------------------------------------------------|");
     }
 
     return sb.toString();
@@ -120,7 +137,7 @@ public class Report {
   }
 
   private String formatAlgorithmName(String name) {
-    return String.format("%1$-" + 39 + "s", "(" + name + ")");
+    return String.format("%1$-" + 46 + "s", "(" + name + ")");
   }
 
   private String formatNumberOfRuns(int success, int total) {
