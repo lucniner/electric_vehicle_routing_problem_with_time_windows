@@ -12,8 +12,12 @@ public class TimeWindow {
     this.dueTime = dueTime;
   }
 
-  public boolean isIntimeWindow(final double time) {
-    return readyTime <= time && time <= dueTime;
+  public boolean isInTimeWindow(final double time) {
+    return readyTime <= time && isBeforeDueTime(time);
+  }
+
+  public boolean isBeforeDueTime(final double time) {
+    return time <= dueTime;
   }
 
   public double getReadyTime() {

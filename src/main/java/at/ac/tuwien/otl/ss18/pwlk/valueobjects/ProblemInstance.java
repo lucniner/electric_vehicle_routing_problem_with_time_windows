@@ -6,22 +6,22 @@ import java.util.Objects;
 public class ProblemInstance {
 
   private final Depot depot;
-  private final List<FuelStation> fuelStations;
+  private final List<ChargingStations> chargingStations;
   private final List<Customer> customers;
-  private final double fuelTankCapacity;
+  private final double batteryCapacity;
   private final double loadCapacity;
-  private final double fuelConsumptionRate;
-  private final double inverseRefuelingRate;
+  private final double chargingCapacityRate;
+  private final double inverseRechargingRate;
   private final double averageVelocity;
 
-  public ProblemInstance(final Depot depot, final List<FuelStation> fuelStations, final List<Customer> customers, final double fuelTankCapacity, final double loadCapacity, final double fuelConsumptionRate, final double inverseRefuelingRate, final double averageVelocity) {
+  public ProblemInstance(final Depot depot, final List<ChargingStations> chargingStations, final List<Customer> customers, final double batteryCapacity, final double loadCapacity, final double chargingCapacityRate, final double inverseRechargingRate, final double averageVelocity) {
     this.depot = depot;
-    this.fuelStations = fuelStations;
+    this.chargingStations = chargingStations;
     this.customers = customers;
-    this.fuelTankCapacity = fuelTankCapacity;
+    this.batteryCapacity = batteryCapacity;
     this.loadCapacity = loadCapacity;
-    this.fuelConsumptionRate = fuelConsumptionRate;
-    this.inverseRefuelingRate = inverseRefuelingRate;
+    this.chargingCapacityRate = chargingCapacityRate;
+    this.inverseRechargingRate = inverseRechargingRate;
     this.averageVelocity = averageVelocity;
   }
 
@@ -30,28 +30,28 @@ public class ProblemInstance {
     return depot;
   }
 
-  public List<FuelStation> getFuelStations() {
-    return fuelStations;
+  public List<ChargingStations> getChargingStations() {
+    return chargingStations;
   }
 
   public List<Customer> getCustomers() {
     return customers;
   }
 
-  public double getFuelTankCapacity() {
-    return fuelTankCapacity;
+  public double getBatteryCapacity() {
+    return batteryCapacity;
   }
 
   public double getLoadCapacity() {
     return loadCapacity;
   }
 
-  public double getFuelConsumptionRate() {
-    return fuelConsumptionRate;
+  public double getChargeConsumptionRate() {
+    return chargingCapacityRate;
   }
 
-  public double getInverseRefuelingRate() {
-    return inverseRefuelingRate;
+  public double getInverseRechargingRate() {
+    return inverseRechargingRate;
   }
 
   public double getAverageVelocity() {
@@ -63,32 +63,32 @@ public class ProblemInstance {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     final ProblemInstance that = (ProblemInstance) o;
-    return Double.compare(that.fuelTankCapacity, fuelTankCapacity) == 0 &&
+    return Double.compare(that.batteryCapacity, batteryCapacity) == 0 &&
             Double.compare(that.loadCapacity, loadCapacity) == 0 &&
-            Double.compare(that.fuelConsumptionRate, fuelConsumptionRate) == 0 &&
-            Double.compare(that.inverseRefuelingRate, inverseRefuelingRate) == 0 &&
+            Double.compare(that.chargingCapacityRate, chargingCapacityRate) == 0 &&
+            Double.compare(that.inverseRechargingRate, inverseRechargingRate) == 0 &&
             Double.compare(that.averageVelocity, averageVelocity) == 0 &&
             Objects.equals(depot, that.depot) &&
-            Objects.equals(fuelStations, that.fuelStations) &&
+            Objects.equals(chargingStations, that.chargingStations) &&
             Objects.equals(customers, that.customers);
   }
 
   @Override
   public int hashCode() {
 
-    return Objects.hash(depot, fuelStations, customers, fuelTankCapacity, loadCapacity, fuelConsumptionRate, inverseRefuelingRate, averageVelocity);
+    return Objects.hash(depot, chargingStations, customers, batteryCapacity, loadCapacity, chargingCapacityRate, inverseRechargingRate, averageVelocity);
   }
 
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("valueobjects.ProblemInstance{");
     sb.append("depot=").append(depot);
-    sb.append(", fuelStations=").append(fuelStations);
+    sb.append(", chargingStations=").append(chargingStations);
     sb.append(", customers=").append(customers);
-    sb.append(", fuelTankCapacity=").append(fuelTankCapacity);
+    sb.append(", batteryCapacity=").append(batteryCapacity);
     sb.append(", loadCapacity=").append(loadCapacity);
-    sb.append(", fuelConsumptionRate=").append(fuelConsumptionRate);
-    sb.append(", inverseRefuelingRate=").append(inverseRefuelingRate);
+    sb.append(", chargingCapacityRate=").append(chargingCapacityRate);
+    sb.append(", inverseRechargingRate=").append(inverseRechargingRate);
     sb.append(", averageVelocity=").append(averageVelocity);
     sb.append('}');
     return sb.toString();

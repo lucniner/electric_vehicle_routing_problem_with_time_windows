@@ -23,6 +23,10 @@ public class Route {
     this.route = route;
   }
 
+  public double getDemandOfRoute() {
+    return route.stream().mapToDouble(AbstractNode::getDemand).sum();
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -33,6 +37,4 @@ public class Route {
     return sb.substring(0, sb.length()-2);
   }
 
-  //methoden hinzufügen
-  //getCurrentCapacity
 }

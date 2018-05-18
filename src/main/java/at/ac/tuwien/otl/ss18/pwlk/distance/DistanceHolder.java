@@ -1,9 +1,10 @@
 package at.ac.tuwien.otl.ss18.pwlk.distance;
 
+import at.ac.tuwien.otl.ss18.pwlk.constraints.ConstraintsChecker;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ChargingStations;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Customer;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.FuelStation;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 
 import java.util.*;
@@ -11,13 +12,15 @@ import java.util.stream.Collectors;
 
 public class DistanceHolder {
 
-  private final ProblemInstance problemInstance;
+
 
   private final Map<Customer, Double> customerDepotDistances = new HashMap<>();
   private final Map<Customer, List<Pair<AbstractNode, Double>>> interCustomerDistances =
           new HashMap<>();
   private final Map<Customer, List<Pair<AbstractNode, Double>>> customerChargingStationDistances =
           new HashMap<>();
+
+  private final ProblemInstance problemInstance;
 
   public DistanceHolder(final ProblemInstance problemInstance) {
     this.problemInstance = problemInstance;
@@ -42,7 +45,8 @@ public class DistanceHolder {
     for (final Customer initialPoint : problemInstance.getCustomers()) {
       final List<Pair<AbstractNode, Double>> distances = new LinkedList<>();
       for (final Customer to : problemInstance.getCustomers()) {
-        if (!initialPoint.equals(to)) { // do not calculate distance to self would be 0
+        final ConstraintsChecker constraintsChecker = new ConstraintsChecker(problemInstance, initialPoint, to);
+        if (!constraintsChecker.violatesPreprocessingConstraints()) {
           final double distance =
                   DistanceCalculator.calculateDistanceBetweenNodes(initialPoint, to);
           distances.add(new Pair<>(to, distance));
@@ -55,7 +59,7 @@ public class DistanceHolder {
   private void calculateCustomerToRechargingDistances() {
     for (final Customer initialPoint : problemInstance.getCustomers()) {
       final List<Pair<AbstractNode, Double>> distances = new LinkedList<>();
-      for (final FuelStation to : problemInstance.getFuelStations()) {
+      for (final ChargingStations to : problemInstance.getChargingStations()) {
         final double distance = DistanceCalculator.calculateDistanceBetweenNodes(initialPoint, to);
         distances.add(new Pair<>(to, distance));
       }
@@ -104,5 +108,9 @@ public class DistanceHolder {
     } else {
       return Collections.emptyList();
     }
+  }
+
+  public Map<Customer, List<Pair<AbstractNode, Double>>> getInterCustomerDistances() {
+    return interCustomerDistances;
   }
 }
