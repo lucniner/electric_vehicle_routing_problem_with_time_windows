@@ -23,9 +23,9 @@ class NodeInstanceReader {
     return new Depot(index, id, location, demand, timeWindow, serviceTime);
   }
 
-  FuelStation extractFuelStation() {
+  ChargingStations extractFuelStation() {
     parseLine();
-    return new FuelStation(index, id, location, demand, timeWindow, serviceTime);
+    return new ChargingStations(index, id, location, demand, timeWindow, serviceTime);
   }
 
   Customer extractCustomer() {

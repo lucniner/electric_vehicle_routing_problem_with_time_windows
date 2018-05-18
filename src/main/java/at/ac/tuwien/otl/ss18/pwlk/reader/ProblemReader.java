@@ -1,8 +1,8 @@
 package at.ac.tuwien.otl.ss18.pwlk.reader;
 
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ChargingStations;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Customer;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Depot;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.FuelStation;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class ProblemReader {
 
   private final String instanceFilePath;
   private Depot depot;
-  private List<FuelStation> fuelStations = new LinkedList<>();
+  private List<ChargingStations> chargingStations = new LinkedList<>();
   private List<Customer> customers = new LinkedList<>();
   private double fuelTankCapacity;
   private double loadCapacity;
@@ -43,7 +43,7 @@ public class ProblemReader {
     }
     return new ProblemInstance(
             depot,
-            fuelStations,
+            chargingStations,
             customers,
             fuelTankCapacity,
             loadCapacity,
@@ -79,7 +79,7 @@ public class ProblemReader {
     if (firstElementInLine.startsWith("D")) {
       depot = reader.extractDepot();
     } else if (firstElementInLine.startsWith("S")) {
-      fuelStations.add(reader.extractFuelStation());
+      chargingStations.add(reader.extractFuelStation());
     } else {
       customers.add(reader.extractCustomer());
     }
