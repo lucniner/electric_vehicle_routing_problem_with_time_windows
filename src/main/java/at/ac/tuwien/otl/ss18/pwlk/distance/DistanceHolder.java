@@ -81,7 +81,7 @@ public class DistanceHolder {
             .sum(); // using sum here because it returns a double and does not affect the distance
   }
 
-  public List<Pair<AbstractNode, Double>> getNearestCustomersForCustomer(final Customer from) {
+  public List<Pair<AbstractNode, Double>> getNearestCustomersForCustomer(final AbstractNode from) {
     final OptionalDouble minDistance = calculateMinDistanceInList(interCustomerDistances.get(from));
     return calculateMinNodeBasedOnDistance(interCustomerDistances.get(from), minDistance);
   }

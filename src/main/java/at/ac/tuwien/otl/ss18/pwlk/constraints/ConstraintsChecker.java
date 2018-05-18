@@ -40,7 +40,7 @@ public class ConstraintsChecker {
 
   public boolean violatesLatestStartOfServiceBetweenNodes() {
     final double latestArrival = noteSatisfactionTime();
-    return second.getTimeWindow().isBeforeDueTime(latestArrival);
+    return !second.getTimeWindow().isBeforeDueTime(latestArrival);
   }
 
   public boolean violatesLatestArrivalAtDepot() {
@@ -49,7 +49,7 @@ public class ConstraintsChecker {
             DistanceCalculator.calculateDistanceBetweenNodes(second, problemInstance.getDepot());
     final double latestArrival =
             noteSatisfactionTime() + serviceTimeSecondCustomer + travelTimeDepot;
-    return problemInstance.getDepot().getTimeWindow().isBeforeDueTime(latestArrival);
+    return !problemInstance.getDepot().getTimeWindow().isBeforeDueTime(latestArrival);
   }
 
   private double noteSatisfactionTime() {
@@ -59,6 +59,7 @@ public class ConstraintsChecker {
     return readyTime + serviceTime + travelTime;
   }
 
+  //TODO not completely correct
   public boolean violatesBatteryCapacityConstraint() {
     final List<ChargingStations> firstSet = problemInstance.getChargingStations();
     final List<ChargingStations> secondSet = problemInstance.getChargingStations();
@@ -74,10 +75,10 @@ public class ConstraintsChecker {
                 stationFirstCustomerDistance + customerDistance + secondCustomerStationDistance;
         final double discharging = problemInstance.getChargeConsumptionRate() * totalDistance;
         if (discharging > problemInstance.getBatteryCapacity()) {
-          return true;
+          return false;
         }
       }
     }
-    return false;
+    return true;
   }
 }
