@@ -32,4 +32,7 @@ public class Route {
     }
     return sb.substring(0, sb.length()-2);
   }
+
+  //methoden hinzufügen
+  //getCurrentCapacity
 }
