@@ -4,7 +4,9 @@ import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceCalculator;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ChargingStations;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
+import com.google.common.collect.Iterables;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ConstraintsChecker {
@@ -26,7 +28,7 @@ public class ConstraintsChecker {
             || violatesCapacity()
             || violatesLatestStartOfServiceBetweenNodes()
             || violatesLatestArrivalAtDepot()
-            || violatesBatteryCapacityConstraint();
+            || violatesBatteryCapacityConstraint2();
   }
 
   public boolean isSelf() {
@@ -80,5 +82,33 @@ public class ConstraintsChecker {
       }
     }
     return true;
+  }
+
+  public boolean violatesBatteryCapacityConstraint2() {
+    List<AbstractNode> chargingStationsList = (List<AbstractNode>)((List<? extends AbstractNode>) problemInstance.getChargingStations());
+
+    for (final AbstractNode firstStation : Iterables.concat(chargingStationsList, getDepotAsList())) {
+      for (final AbstractNode secondStation : Iterables.concat(chargingStationsList, getDepotAsList())) {
+        final double stationFirstCustomerDistance =
+                DistanceCalculator.calculateDistanceBetweenNodes(firstStation, first);
+        final double customerDistance =
+                DistanceCalculator.calculateDistanceBetweenNodes(first, second);
+        final double secondCustomerStationDistance =
+                DistanceCalculator.calculateDistanceBetweenNodes(second, secondStation);
+        final double totalDistance =
+                stationFirstCustomerDistance + customerDistance + secondCustomerStationDistance;
+        final double discharging = problemInstance.getChargeConsumptionRate() * totalDistance;
+        if (discharging > problemInstance.getBatteryCapacity()) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private List<AbstractNode> getDepotAsList() {
+    ArrayList<AbstractNode> depotList = new ArrayList<>();
+    depotList.add(problemInstance.getDepot());
+    return depotList;
   }
 }

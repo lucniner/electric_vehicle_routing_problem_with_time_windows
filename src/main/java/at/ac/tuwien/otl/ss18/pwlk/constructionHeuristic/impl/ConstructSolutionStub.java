@@ -11,8 +11,8 @@ import java.util.*;
 
 public class ConstructSolutionStub extends AbstractConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final List<Route> pendelRoutes = new ArrayList<>();
 
+  private List<Route> pendelRoutes;
   private Depot depot;
   private double batteryCapacity;
   private ProblemInstance problemInstance;
@@ -21,9 +21,10 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
   @Override
   Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) {
     logger.info("Construct solution with algorithm 'Stub'");
-    final SolutionInstance solutionInstance = new SolutionInstance();
-    depot = problemInstance.getDepot();
-    batteryCapacity = problemInstance.getBatteryCapacity();
+    SolutionInstance solutionInstance = new SolutionInstance();
+    this.pendelRoutes = new ArrayList<>();
+    this.depot = problemInstance.getDepot();
+    this.batteryCapacity = problemInstance.getBatteryCapacity();
     this.problemInstance = problemInstance;
     this.distanceHolder = new DistanceHolder(problemInstance);
 
@@ -39,7 +40,7 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
 
     createPendelRoutes();
     solutionInstance.setRoutes(pendelRoutes);
-
+    solutionInstance = new MergeRoute(this.problemInstance, this.distanceHolder, solutionInstance).mergeRoutes();
     return Optional.of(solutionInstance);
   }
 
