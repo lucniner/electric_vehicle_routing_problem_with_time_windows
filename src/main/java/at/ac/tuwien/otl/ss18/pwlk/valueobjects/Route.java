@@ -45,6 +45,20 @@ public class Route {
   }
 
   @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    final Route route = (Route) o;
+    return Objects.equals(this.distance, route.distance) &&
+            Objects.equals(this.route, route.route);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(distance, route);
+  }
+
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     for (AbstractNode abstractNode : route) {
