@@ -60,7 +60,7 @@ public class ModifyRoute {
       }
     }
 
-    logger.info("Must add charging station for pendel route before customer: " + routeList);
+    logger.info("Must add charging station for pendel route before customer");
 
     Collections.reverse(list);
     for (Pair<AbstractNode, Double> chargingStations : list) {
