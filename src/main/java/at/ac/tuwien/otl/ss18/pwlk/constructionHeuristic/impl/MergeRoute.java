@@ -126,7 +126,7 @@ public class MergeRoute {
     Route remainingRoute;
     List<Pair<Car, List<AbstractNode>>> possibleSolutions = new ArrayList<>();
 
-    int maxIteration = 9;
+    int maxIteration = 10;
     for(int i=0; i<maxIteration; i++) {
       remainingRoute = route2.copyRoute();
       newCar = car.cloneCar();
@@ -134,8 +134,10 @@ public class MergeRoute {
       // delete start depot from remaining route
       remainingRoute.setRoute(remainingRoute.getRoute().subList(1, remainingRoute.getRoute().size()));
 
+      // if (i == 0) do no special treatment
+
       // try without possible chargingstation on route2 end
-      if (i == 0) {
+      if (i == 1) {
         if (remainingRoute.getRoute().get(remainingRoute.getRoute().size()-2) instanceof ChargingStations) {
           remainingRoute.getRoute().remove(remainingRoute.getRoute().size()-2);
         }
@@ -143,7 +145,7 @@ public class MergeRoute {
 
       // try without possible chargingstation on route2 end and insert possible charging station between route1 and route2
       // new charging station near route 1
-      if (i == 1) {
+      if (i == 2) {
         if (remainingRoute.getRoute().get(remainingRoute.getRoute().size() - 2) instanceof ChargingStations) {
           remainingRoute.getRoute().remove(remainingRoute.getRoute().size() - 2);
 
@@ -161,7 +163,7 @@ public class MergeRoute {
 
       // try without possible chargingstation on route2 end and insert possible charging station between route1 and route2
       // new charging station near route 2
-      if (i == 2) {
+      if (i == 3) {
         if (remainingRoute.getRoute().get(remainingRoute.getRoute().size() - 2) instanceof ChargingStations) {
           remainingRoute.getRoute().remove(remainingRoute.getRoute().size() - 2);
 
@@ -178,7 +180,7 @@ public class MergeRoute {
       }
 
       // try without possible chargingstation on route2 start
-      if (i == 3) {
+      if (i == 4) {
         if (remainingRoute.getRoute().get(0) instanceof ChargingStations) {
           remainingRoute.getRoute().remove(0);
         }
@@ -186,7 +188,7 @@ public class MergeRoute {
 
       // try without possible chargingstation on route2 start
       // new charging station near route 1
-      if (i == 4) {
+      if (i == 5) {
         if (remainingRoute.getRoute().get(0) instanceof ChargingStations) {
           remainingRoute.getRoute().remove(0);
         }
@@ -204,7 +206,7 @@ public class MergeRoute {
 
       // try without possible chargingstation on route2 start
       // new charging station near route 2
-      if (i == 5) {
+      if (i == 6) {
         if (remainingRoute.getRoute().get(0) instanceof ChargingStations) {
           remainingRoute.getRoute().remove(0);
         }
@@ -222,7 +224,7 @@ public class MergeRoute {
 
       // try with possible charging station between route 1 and route 2
       // new charging station near route 1
-      if (i == 6) {
+      if (i == 7) {
         List<Pair<AbstractNode, Double>> list = distanceHolder.getNearestRechargingStationsForCustomerInDistance(
                 firstRoute.getRoute().get(firstRoute.getRoute().size() - 1),
                 remainingRoute.getRoute().get(0)
@@ -235,7 +237,7 @@ public class MergeRoute {
 
       // try with possible charging station between route 1 and route 2
       // new charging station near route 2
-      if (i == 7) {
+      if (i == 8) {
         List<Pair<AbstractNode, Double>> list = distanceHolder.getNearestRechargingStationsForCustomerInDistance(
                 remainingRoute.getRoute().get(0),
                 firstRoute.getRoute().get(firstRoute.getRoute().size() - 1)
@@ -246,7 +248,29 @@ public class MergeRoute {
         }
       }
 
-      // if (i == 8) do no special treatment
+      // try two possible charging station between route 1 and route 2
+      if (i == 9) {
+        if (remainingRoute.getRoute().get(0) instanceof ChargingStations) {
+          remainingRoute.getRoute().remove(0);
+        }
+        List<Pair<AbstractNode, Double>> list = distanceHolder.getNearestRechargingStationsForCustomerInDistance(
+                remainingRoute.getRoute().get(0),
+                firstRoute.getRoute().get(firstRoute.getRoute().size() - 1)
+        );
+        if (!list.isEmpty()) {
+          AbstractNode abstractNode = list.get(0).getKey();
+          remainingRoute.getRoute().add(0, abstractNode);
+        }
+
+        list = distanceHolder.getNearestRechargingStationsForCustomerInDistance(
+                firstRoute.getRoute().get(firstRoute.getRoute().size() - 1),
+                remainingRoute.getRoute().get(0)
+        );
+        if (!list.isEmpty()) {
+          AbstractNode abstractNode = list.get(0).getKey();
+          remainingRoute.getRoute().add(0, abstractNode);
+        }
+      }
 
       // now connect route 1 and remaining route
       remainingRoute.getRoute().add(0, firstRoute.getRoute().get(firstRoute.getRoute().size() - 1));
