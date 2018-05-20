@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,38 +61,38 @@ public class MergeRoute {
   }
 
   private Map<Pair<Route, Route>, Pair<Route, Double>> calculateSavingsValue() {
-    Map<Pair<Route, Route>, Pair<Route,Double>> savings = new HashMap<>();
+    Map<Pair<Route, Route>, Pair<Route,Double>> savings = new ConcurrentHashMap<>();
 
     //TODO vllt statt check von allen routen mit allen schon die infeasible routes weggeben?
     // die schon weggefiltert worden sind mit den constraints vom paper
     // -> man braucht aber eine method um zu checken ob die distanz möglich ist (nicht nur zwischen 2 customer)
-    for (final Route route1: solutionInstance.getRoutes()) {
-        for (final Route route2 : solutionInstance.getRoutes()) {
-            if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
-              for(int i=0; i<4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
-                Route route1p;
-                Route route2p;
-                if(i == 0) {
-                  route1p = route1.copyRoute();
-                  route2p = route2.copyRoute();
-                }else if (i == 1) {
-                  route1p = route1.copyRoute();
-                  route2p = route2.copyInverseRoute();
-                }else if (i == 2) {
-                  route1p = route1.copyInverseRoute();
-                  route2p = route2.copyRoute();
-                }else {
-                  route1p = route1.copyInverseRoute();
-                  route2p = route2.copyInverseRoute();
-                }
-                Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
-                if (newRoute.isPresent()) {
-                  savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
-                }
-              }
+    solutionInstance.getRoutes().parallelStream().forEach((route1) -> {
+      for (final Route route2 : solutionInstance.getRoutes()) {
+        if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
+          for (int i = 0; i < 4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
+            Route route1p;
+            Route route2p;
+            if (i == 0) {
+              route1p = route1.copyRoute();
+              route2p = route2.copyRoute();
+            } else if (i == 1) {
+              route1p = route1.copyRoute();
+              route2p = route2.copyInverseRoute();
+            } else if (i == 2) {
+              route1p = route1.copyInverseRoute();
+              route2p = route2.copyRoute();
+            } else {
+              route1p = route1.copyInverseRoute();
+              route2p = route2.copyInverseRoute();
+            }
+            Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
+            if (newRoute.isPresent()) {
+              savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
+            }
+          }
         }
       }
-    }
+    });
     return savings;
   }
 
