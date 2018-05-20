@@ -190,6 +190,7 @@ public class MergeRoute {
       try {
         newCar.driveRoute(remainingRoute.getRoute());
         possibleSolutions.add(new Pair(newCar, remainingRoute.getRoute()));
+        break; //TODO: use first instead of best solution is better overall
       } catch (BatteryViolationException b) {
         if (i == (maxIteration - 1)) {
           return Optional.empty();
@@ -207,8 +208,6 @@ public class MergeRoute {
       Car bestCar = null;
       List<AbstractNode> bestRemainingRoute = null;
 
-      //TODO: best distance macht die lösung schlechter
-      // war vorher besser wie nach einer validen lösung abgebrochen worden is
       for (Pair pair : possibleSolutions) {
         if (bestCar == null) {
           bestCar = (Car)pair.getKey();
