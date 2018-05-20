@@ -177,15 +177,9 @@ public class MergeRoute {
       try {
         newCar.driveRoute(remainingRoute.getRoute());
         possibleSolutions.add(new Pair(newCar, remainingRoute.getRoute()));
-        break; //TODO: use first instead of best solution is better overall
+        //break; //TODO: use first instead of best solution is better overall
       } catch (BatteryViolationException b) {
-        if (i == (maxIteration - 1)) {
-          return Optional.empty();
-        }
       } catch (TimewindowViolationException t) {
-        if (i == (maxIteration - 1)) {
-          return Optional.empty();
-        }
       }
     }
 
