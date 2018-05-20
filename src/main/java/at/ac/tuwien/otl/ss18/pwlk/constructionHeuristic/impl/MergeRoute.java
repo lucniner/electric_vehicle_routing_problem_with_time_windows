@@ -16,10 +16,6 @@ import java.util.stream.Stream;
 public class MergeRoute {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-
-  // die routen, die beim ersten mal mit keiner anderen route gemerged werden konnten, werden nicht nochmal probiert
-  private List<Route> hopelessRoutes;
-
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
   private SolutionInstance solutionInstance;
@@ -28,7 +24,6 @@ public class MergeRoute {
     this.problemInstance = problemInstance;
     this.distanceHolder = distanceHolder;
     this.solutionInstance = solutionInstance;
-    this.hopelessRoutes = new ArrayList<>();
   }
 
   public SolutionInstance mergeRoutes() {
@@ -70,11 +65,8 @@ public class MergeRoute {
     //TODO vllt statt check von allen routen mit allen schon die infeasible routes weggeben?
     // die schon weggefiltert worden sind mit den constraints vom paper
     // -> man braucht aber eine method um zu checken ob die distanz möglich ist (nicht nur zwischen 2 customer)
-    boolean isHopeLess = true;
     for (final Route route1: solutionInstance.getRoutes()) {
-      if (!hopelessRoutes.contains(route1)) { // macht keinen sinn hoffnungslose routen nochmal zu probieren zu mergen
         for (final Route route2 : solutionInstance.getRoutes()) {
-          if (!hopelessRoutes.contains(route2)) { //macht keinen sinn hoffnungslose routen nochmal zu probieren
             if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
               for(int i=0; i<4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
                 Route route1p;
@@ -95,14 +87,8 @@ public class MergeRoute {
                 Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
                 if (newRoute.isPresent()) {
                   savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
-                  isHopeLess = false;
                 }
               }
-            }
-          }
-        }
-        if (isHopeLess) {
-          hopelessRoutes.add(route1);
         }
       }
     }
