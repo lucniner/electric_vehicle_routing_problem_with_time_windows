@@ -1,5 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic;
 
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwRunException;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 
@@ -12,5 +13,5 @@ public interface IConstructSolution {
    * @param timeout
    * @return
    */
-  Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout);
+  Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout) throws EvrptwRunException;
 }

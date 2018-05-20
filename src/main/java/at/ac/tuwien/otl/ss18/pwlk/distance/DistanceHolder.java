@@ -93,6 +93,34 @@ public class DistanceHolder {
     return calculateMinNodeBasedOnDistance(customerChargingStationDistances.get(from), minDistance);
   }
 
+  // add at first charging stations from the target, then charging stations from the departure node
+  public List<Pair<AbstractNode, Double>> getNearestRechargingStationsForCustomerInDistance(final AbstractNode targetNode, final AbstractNode maxDistanceNode) {
+    List<ChargingStations> chargingStationList = problemInstance.getChargingStations();
+    double maxDistance =  DistanceCalculator.calculateDistanceBetweenNodes(targetNode, maxDistanceNode);
+
+    List<Pair<AbstractNode, Double>> stations = new ArrayList<>();
+    for(ChargingStations chargingStations : chargingStationList) {
+      double distance = DistanceCalculator.calculateDistanceBetweenNodes(targetNode, chargingStations);
+
+      if (distance < maxDistance) {
+        stations.add(new Pair(chargingStations, distance));
+      }
+    }
+
+    for(ChargingStations chargingStations : chargingStationList) {
+      double distance = DistanceCalculator.calculateDistanceBetweenNodes(maxDistanceNode, chargingStations);
+      double actualDistance = DistanceCalculator.calculateDistanceBetweenNodes(targetNode, chargingStations);
+
+      if (distance < maxDistance) {
+        stations.add(new Pair(chargingStations, actualDistance));
+      }
+    }
+
+    Collections.reverse(stations);
+
+    return stations;
+  }
+
   private OptionalDouble calculateMinDistanceInList(
           final List<Pair<AbstractNode, Double>> distances) {
     return distances.stream().mapToDouble(Pair::getValue).min();
