@@ -1,6 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwRunException;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
@@ -17,7 +18,7 @@ public abstract class AbstractConstructSolution implements IConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout) {
+  public Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout) throws EvrptwRunException{
     SimpleTimeLimiter limiter = SimpleTimeLimiter.create(Executors.newCachedThreadPool());
 
     Optional<SolutionInstance> solutionInstance = Optional.empty();
@@ -38,5 +39,5 @@ public abstract class AbstractConstructSolution implements IConstructSolution {
     return solutionInstance;
   }
 
-  abstract Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance);
+  abstract Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) throws EvrptwRunException;
 }

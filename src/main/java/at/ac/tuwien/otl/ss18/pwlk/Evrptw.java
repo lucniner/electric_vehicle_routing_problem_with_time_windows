@@ -3,6 +3,7 @@ package at.ac.tuwien.otl.ss18.pwlk;
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl.ConstructSolutionStub;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwInitializeException;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwRunException;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.IOptimizeSolution;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl.OptimizeSolutionStub;
 import at.ac.tuwien.otl.ss18.pwlk.reader.ProblemReader;
@@ -150,15 +151,19 @@ public class Evrptw {
     report.setConstructAlgorithmName(constructSolution.getClass().getSimpleName());
     report.setOptimizeAlgorithmName(optimizeSolution.getClass().getSimpleName());
 
-    for(String instancePath : problemInstances.keySet()) {
-      InstanceReport instanceReport = runInstance(instancePath, problemInstances.get(instancePath));
-      report.setInstanceReport(instanceReport);
+    try {
+      for(String instancePath : problemInstances.keySet()) {
+        InstanceReport instanceReport = runInstance(instancePath, problemInstances.get(instancePath));
+        report.setInstanceReport(instanceReport);
+      }
+    } catch (EvrptwRunException e) {
+      logger.error("Exception occured while running algorithm: " + e.getLocalizedMessage());
     }
 
     logger.info(report.toString());
   }
 
-  private InstanceReport runInstance(String instancePath, ProblemInstance problemInstance) {
+  private InstanceReport runInstance(String instancePath, ProblemInstance problemInstance) throws EvrptwRunException {
 
     String instanceName = instancePath.substring(instancePath.lastIndexOf("/")+1, instancePath.lastIndexOf("_"));
 

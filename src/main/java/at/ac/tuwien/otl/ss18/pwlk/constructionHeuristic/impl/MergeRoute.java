@@ -1,6 +1,5 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
-import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceCalculator;
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
@@ -97,24 +96,39 @@ public class MergeRoute {
       Optional.empty();
     }
 
-    Car car = new Car();
+    Car car = new Car(problemInstance);
 
     try {
-      car.driveRoute(route1.getRoute().subList(0, route1.getRoute().size()-1));
-      car.moveCar(route1.getRoute().get(route1.getRoute().size()-2),
-              route2.getRoute().get(1)
-      );
-      car.driveRoute(route2.getRoute().subList(1, route2.getRoute().size()));
-    } catch (BatteryViolationException b) {
-      //logger.error("BatteryViolation occured");
-      return Optional.empty();
-
+      car.driveRoute(route1.getRoute().subList(0, route1.getRoute().size() - 1));
     } catch (TimewindowViolationException t) {
-      //logger.error("TimeViolation occured");
-      return Optional.empty();
+      logger.error("The exception should not happen on the first route to travel: " + t.getLocalizedMessage());
+      Optional.empty();
+    } catch (BatteryViolationException b) {
+      logger.error("The exception should not happen on the first route to travel: " + b.getLocalizedMessage());
+      Optional.empty();
     }
 
-    if (car.currentDistance > (route1.getDistance() + route2.getDistance())) {
+    Car newCar = null;
+    for(int i=0; i<2; i++) {
+      newCar = car.cloneCar();
+      try {
+        List<AbstractNode> injectRoute = new ArrayList<>();
+        injectRoute.add(route1.getRoute().get(route1.getRoute().size() - 2));
+        injectRoute.add(route2.getRoute().get(1));
+        newCar.driveRoute(injectRoute);
+
+        newCar.driveRoute(route2.getRoute().subList(1, route2.getRoute().size()));
+      } catch (BatteryViolationException b) {
+        //logger.error("BatteryViolation occured");
+        return Optional.empty();
+
+      } catch (TimewindowViolationException t) {
+        //logger.error("TimeViolation occured");
+        return Optional.empty();
+      }
+    }
+
+    if (newCar.getCurrentDistance() > (route1.getDistance() + route2.getDistance())) {
       return Optional.empty();
     }
 
@@ -123,68 +137,12 @@ public class MergeRoute {
             route2.getRoute().subList(1, route2.getRoute().size()).stream())
             .collect(Collectors.toList());
     Route route = new Route();
-    route.setDistance(car.currentDistance);
+    route.setDistance(newCar.getCurrentDistance());
     route.setRoute(newRouteList);
 
-    double distanceSaving = (route1.getDistance() + route2.getDistance()) - car.currentDistance;
+    double distanceSaving = (route1.getDistance() + route2.getDistance()) - newCar.getCurrentDistance();
 
     return Optional.of(new Pair(route, distanceSaving));
   }
 
-  private class Car {
-    private double currentBatteryCapacity;
-    private double currentTime;
-    private double currentDistance;
-
-    Car() {
-      currentBatteryCapacity = problemInstance.getBatteryCapacity();
-      currentTime = problemInstance.getDepot().getTimeWindow().getReadyTime();
-      currentDistance = 0;
-    }
-
-    private void chargeCar() {
-      currentTime += problemInstance.getInverseRechargingRate()
-              * (problemInstance.getBatteryCapacity() - currentBatteryCapacity); // wait till vehicle capacity is full
-      currentBatteryCapacity = problemInstance.getBatteryCapacity(); // vehicle has now full capacity
-    }
-
-    void moveCar(AbstractNode departure, AbstractNode arrival) throws BatteryViolationException, TimewindowViolationException {
-      double distance = DistanceCalculator.calculateDistanceBetweenNodes(departure, arrival);
-      currentTime += distance / problemInstance.getAverageVelocity(); // travel time = distance/velocity
-      currentBatteryCapacity -= problemInstance.getChargeConsumptionRate() * distance; // subtract used battery capacity
-      currentDistance += distance; // add travelled distance to total travelled distance
-
-      if (currentBatteryCapacity < 0) { // if battery was not enough to travel the distance throw exception
-        throw new BatteryViolationException();
-      }
-
-      if (currentTime > arrival.getTimeWindow().getDueTime()) { // if arrival after latest arrival time throw exception
-        throw new TimewindowViolationException();
-      }
-
-      if (currentTime < arrival.getTimeWindow().getReadyTime()) { // if arrival before ready time wait
-        currentTime += arrival.getTimeWindow().getReadyTime() - currentTime; // add waiting time
-      }
-
-      currentTime += arrival.getServiceTime(); // add service time for service in arrival node
-
-      if (arrival instanceof ChargingStations) { // if arrival node is a charging station then charge vehicle
-        chargeCar();
-      }
-
-    }
-
-    // für optimierung wsl besser wenn endcapacity in route steht
-    void driveRoute(List<AbstractNode> route) throws BatteryViolationException, TimewindowViolationException {
-      AbstractNode lastNode = null;
-      for (AbstractNode abstractNode : route) {
-        if (lastNode == null) {
-          lastNode = abstractNode;
-        } else {
-          moveCar(lastNode, abstractNode);
-          lastNode = abstractNode;
-        }
-      }
-    }
-  }
 }
