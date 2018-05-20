@@ -116,7 +116,7 @@ public class DistanceHolder {
       }
     }
 
-    Collections.reverse(stations);
+    Collections.sort(stations, Comparator.comparing(Pair::getValue));
 
     return stations;
   }
