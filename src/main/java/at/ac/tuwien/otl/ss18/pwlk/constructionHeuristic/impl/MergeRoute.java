@@ -9,16 +9,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 // joint bei jeder iteration immer die besten routen zusammen und berechnet anschließend nochmal die verkürzungen
 public class MergeRoute {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-
-  // die routen, die beim ersten mal mit keiner anderen route gemerged werden konnten, werden nicht nochmal probiert
-  private List<Route> hopelessRoutes;
 
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
@@ -28,7 +25,6 @@ public class MergeRoute {
     this.problemInstance = problemInstance;
     this.distanceHolder = distanceHolder;
     this.solutionInstance = solutionInstance;
-    this.hopelessRoutes = new ArrayList<>();
   }
 
   public SolutionInstance mergeRoutes() {
@@ -65,47 +61,38 @@ public class MergeRoute {
   }
 
   private Map<Pair<Route, Route>, Pair<Route, Double>> calculateSavingsValue() {
-    Map<Pair<Route, Route>, Pair<Route,Double>> savings = new HashMap<>();
+    Map<Pair<Route, Route>, Pair<Route,Double>> savings = new ConcurrentHashMap<>();
 
     //TODO vllt statt check von allen routen mit allen schon die infeasible routes weggeben?
     // die schon weggefiltert worden sind mit den constraints vom paper
     // -> man braucht aber eine method um zu checken ob die distanz möglich ist (nicht nur zwischen 2 customer)
-    boolean isHopeLess = true;
-    for (final Route route1: solutionInstance.getRoutes()) {
-      if (!hopelessRoutes.contains(route1)) { // macht keinen sinn hoffnungslose routen nochmal zu probieren zu mergen
-        for (final Route route2 : solutionInstance.getRoutes()) {
-          if (!hopelessRoutes.contains(route2)) { //macht keinen sinn hoffnungslose routen nochmal zu probieren
-            if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
-              for(int i=0; i<4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
-                Route route1p;
-                Route route2p;
-                if(i == 0) {
-                  route1p = route1.copyRoute();
-                  route2p = route2.copyRoute();
-                }else if (i == 1) {
-                  route1p = route1.copyRoute();
-                  route2p = route2.copyInverseRoute();
-                }else if (i == 2) {
-                  route1p = route1.copyInverseRoute();
-                  route2p = route2.copyRoute();
-                }else {
-                  route1p = route1.copyInverseRoute();
-                  route2p = route2.copyInverseRoute();
-                }
-                Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
-                if (newRoute.isPresent()) {
-                  savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
-                  isHopeLess = false;
-                }
-              }
+    solutionInstance.getRoutes().parallelStream().forEach((route1) -> {
+      for (final Route route2 : solutionInstance.getRoutes()) {
+        if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
+          for (int i = 0; i < 4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
+            Route route1p;
+            Route route2p;
+            if (i == 0) {
+              route1p = route1.copyRoute();
+              route2p = route2.copyRoute();
+            } else if (i == 1) {
+              route1p = route1.copyRoute();
+              route2p = route2.copyInverseRoute();
+            } else if (i == 2) {
+              route1p = route1.copyInverseRoute();
+              route2p = route2.copyRoute();
+            } else {
+              route1p = route1.copyInverseRoute();
+              route2p = route2.copyInverseRoute();
+            }
+            Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
+            if (newRoute.isPresent()) {
+              savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
             }
           }
         }
-        if (isHopeLess) {
-          hopelessRoutes.add(route1);
-        }
       }
-    }
+    });
     return savings;
   }
 
@@ -121,91 +108,114 @@ public class MergeRoute {
     try {
       car.driveRoute(route1.getRoute().subList(0, route1.getRoute().size() - 1));
     } catch (TimewindowViolationException t) {
-      // can happen if route1 is inversed
-      //logger.error("The exception should not happen on the first route to travel: " + t.getLocalizedMessage());
       return Optional.empty();
     } catch (BatteryViolationException b) {
-      // can happen if route1 is inversed
-      //logger.error("The exception should not happen on the first route to travel: " + b.getLocalizedMessage());
       return Optional.empty();
     }
 
     //drive distance from route1 to route2 and drive route 2
-    Car newCar = null;
-    List<AbstractNode> injectRoute = new ArrayList<>();
-    Route remainingRoute = null;
-    for(int i=0; i<4; i++) {
+    Car newCar;
+    Route remainingRoute;
+    List<Pair<Car, List<AbstractNode>>> possibleSolutions = new ArrayList<>();
+
+    int maxIteration = 5;
+    for(int i=0; i<maxIteration; i++) {
       remainingRoute = route2.copyRoute();
-
       newCar = car.cloneCar();
-      try {
-        injectRoute= new ArrayList<>();
-        injectRoute.add(route1.getRoute().get(route1.getRoute().size() - 2));
 
-        // try without possible chargingstation on route2 end
-        if (i == 0) {
-          if (remainingRoute.getRoute().get(remainingRoute.getRoute().size()-2) instanceof ChargingStations) {
-            remainingRoute.getRoute().remove(remainingRoute.getRoute().size()-2);
-          }
+      // delete start depot from remaining route
+      remainingRoute.setRoute(remainingRoute.getRoute().subList(1, remainingRoute.getRoute().size()));
+
+      // try without possible chargingstation on route2 end
+      if (i == 0) {
+        if (remainingRoute.getRoute().get(remainingRoute.getRoute().size()-2) instanceof ChargingStations) {
+          remainingRoute.getRoute().remove(remainingRoute.getRoute().size()-2);
         }
+      }
 
-        // try without possible chargingstation between route 1 and route 2
-        if (i == 1) {
-          if (remainingRoute.getRoute().get(1) instanceof ChargingStations) {
-            remainingRoute.getRoute().remove(1);
-          }
+      // try without possible chargingstation between route 1 and route 2
+      if (i == 1) {
+        if (remainingRoute.getRoute().get(0) instanceof ChargingStations) {
+          remainingRoute.getRoute().remove(0);
         }
+      }
 
-        // if i==2 try without modification
+      // try without possible chargingstation on route2 end and insert possible charging station between route1 and route2
+      if (i == 2) {
+        if (remainingRoute.getRoute().get(remainingRoute.getRoute().size() - 2) instanceof ChargingStations) {
+          remainingRoute.getRoute().remove(remainingRoute.getRoute().size() - 2);
 
-        // try with possible charging station between route 1 and route 2
-        if (i == 3) {
           List<Pair<AbstractNode, Double>> list = distanceHolder.getNearestRechargingStationsForCustomerInDistance(
-                  remainingRoute.getRoute().get(1),
-                  route1.getRoute().get(route1.getRoute().size() - 2)
+                  route1.getRoute().get(route1.getRoute().size() - 2),
+                  remainingRoute.getRoute().get(0)
           );
           if (!list.isEmpty()) {
             AbstractNode abstractNode = list.get(0).getKey();
-            injectRoute.add(abstractNode);
+            remainingRoute.getRoute().add(0, abstractNode);
           }
+
         }
+      }
 
-        injectRoute.add(remainingRoute.getRoute().get(1));
-        newCar.driveRoute(injectRoute);
+      // try with possible charging station between route 1 and route 2
+      if (i == 3) {
+        List<Pair<AbstractNode, Double>> list = distanceHolder.getNearestRechargingStationsForCustomerInDistance(
+                route1.getRoute().get(route1.getRoute().size() - 2),
+                remainingRoute.getRoute().get(0)
+        );
+        if (!list.isEmpty()) {
+          AbstractNode abstractNode = list.get(0).getKey();
+          remainingRoute.getRoute().add(0, abstractNode);
+        }
+      }
 
-        newCar.driveRoute(remainingRoute.getRoute().subList(1, remainingRoute.getRoute().size()));
+      // if (i == 4) do no special treatment
 
-        break;
+      // now connect route 1 and remaining route
+      remainingRoute.getRoute().add(0, route1.getRoute().get(route1.getRoute().size() - 2));
+
+      try {
+        newCar.driveRoute(remainingRoute.getRoute());
+        possibleSolutions.add(new Pair(newCar, remainingRoute.getRoute()));
       } catch (BatteryViolationException b) {
-        if (i == 2) {
-          return Optional.empty();
-        }
-        //logger.error("BatteryViolation occured");
-
       } catch (TimewindowViolationException t) {
-        if (i == 2) {
-          return Optional.empty();
-        }
-        //logger.error("TimeViolation occured");
       }
     }
 
-    if (newCar.getCurrentDistance() > (route1.getDistance() + remainingRoute.getDistance())) {
+    if (possibleSolutions.size() == 0) {
       return Optional.empty();
+    } else {
+      Car bestCar = null;
+      List<AbstractNode> bestRemainingRoute = null;
+
+      for (Pair pair : possibleSolutions) {
+        if (bestCar == null) {
+          bestCar = (Car)pair.getKey();
+          bestRemainingRoute = (List<AbstractNode>)pair.getValue();
+        } else {
+          if (((Car)pair.getKey()).getCurrentDistance() < bestCar.getCurrentDistance()) {
+            bestCar = (Car)pair.getKey();
+            bestRemainingRoute = (List<AbstractNode>)pair.getValue();
+          }
+        }
+      }
+
+      if (bestCar.getCurrentDistance() > (route1.getDistance() + route2.getDistance())) {
+        return Optional.empty();
+      }
+      List<AbstractNode> newRouteList = Stream.concat(
+              route1.getRoute().subList(0, route1.getRoute().size() - 2).stream(),
+              bestRemainingRoute.stream()
+      ).collect(Collectors.toList());
+
+      Route route = new Route();
+      route.setDistance(bestCar.getCurrentDistance());
+      route.setRoute(newRouteList);
+
+      double distanceSaving = (route1.getDistance() + route2.getDistance()) - bestCar.getCurrentDistance();
+
+      return Optional.of(new Pair(route, distanceSaving));
     }
-    List<AbstractNode> newRouteList = Stream.concat(
-            Stream.concat(route1.getRoute().subList(0, route1.getRoute().size()-2).stream(),
-                    injectRoute.stream()),
-            remainingRoute.getRoute().subList(2, remainingRoute.getRoute().size()).stream()
-    ).collect(Collectors.toList());
-
-    Route route = new Route();
-    route.setDistance(newCar.getCurrentDistance());
-    route.setRoute(newRouteList);
-
-    double distanceSaving = (route1.getDistance() + remainingRoute.getDistance()) - newCar.getCurrentDistance();
-
-    return Optional.of(new Pair(route, distanceSaving));
   }
 
 }
