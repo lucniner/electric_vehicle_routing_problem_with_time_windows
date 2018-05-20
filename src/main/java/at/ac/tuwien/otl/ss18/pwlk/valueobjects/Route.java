@@ -44,6 +44,21 @@ public class Route {
     return route.contains(node);
   }
 
+  public Route copyInverseRoute() {
+    Route route = new Route();
+    route.distance = this.distance;
+    route.route = new LinkedList<>(this.route);
+    Collections.reverse(route.route);
+    return route;
+  }
+
+  public Route copyRoute() {
+    Route route = new Route();
+    route.distance = this.distance;
+    route.route = new LinkedList<>(this.route);
+    return route;
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;

@@ -1,10 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk.report;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
+import java.util.*;
 
 public class Report {
   private boolean isOptmizied;
@@ -63,6 +60,7 @@ public class Report {
 
   @Override
   public String toString() {
+    Collections.sort(instanceReports, Comparator.comparing(InstanceReport::getInstanceName));
     StringBuilder sb = new StringBuilder();
     sb.append("\n");
     sb.append("\n                | Construction algorithm " + formatAlgorithmName(constructAlgorithmName) + "|");
