@@ -21,6 +21,8 @@ public class MergeRoute {
   private DistanceHolder distanceHolder;
   private SolutionInstance solutionInstance;
 
+  private Map hopeLessMerge = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
+
   public MergeRoute(ProblemInstance problemInstance, DistanceHolder distanceHolder, SolutionInstance solutionInstance) {
     this.problemInstance = problemInstance;
     this.distanceHolder = distanceHolder;
@@ -69,25 +71,33 @@ public class MergeRoute {
     solutionInstance.getRoutes().parallelStream().forEach((route1) -> {
       for (final Route route2 : solutionInstance.getRoutes()) {
         if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
-          for (int i = 0; i < 4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
-            Route route1p;
-            Route route2p;
-            if (i == 0) {
-              route1p = route1.copyRoute();
-              route2p = route2.copyRoute();
-            } else if (i == 1) {
-              route1p = route1.copyRoute();
-              route2p = route2.copyInverseRoute();
-            } else if (i == 2) {
-              route1p = route1.copyInverseRoute();
-              route2p = route2.copyRoute();
-            } else {
-              route1p = route1.copyInverseRoute();
-              route2p = route2.copyInverseRoute();
+          if (!hopeLessMerge.containsKey(new Pair(route1, route2))) {
+          //if (!(Boolean)hopeLessMerge.get(new Pair(route1.copyRoute(), route2.copyRoute()))) {
+            boolean hopeless = true;
+            for (int i = 0; i < 4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
+              Route route1p;
+              Route route2p;
+              if (i == 0) {
+                route1p = route1.copyRoute();
+                route2p = route2.copyRoute();
+              } else if (i == 1) {
+                route1p = route1.copyRoute();
+                route2p = route2.copyInverseRoute();
+              } else if (i == 2) {
+                route1p = route1.copyInverseRoute();
+                route2p = route2.copyRoute();
+              } else {
+                route1p = route1.copyInverseRoute();
+                route2p = route2.copyInverseRoute();
+              }
+              Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
+              if (newRoute.isPresent()) {
+                savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
+                hopeless = false;
+              }
             }
-            Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
-            if (newRoute.isPresent()) {
-              savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
+            if (hopeless) {
+              hopeLessMerge.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
             }
           }
         }
