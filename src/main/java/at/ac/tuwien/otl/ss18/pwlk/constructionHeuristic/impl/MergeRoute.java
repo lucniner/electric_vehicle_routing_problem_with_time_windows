@@ -115,7 +115,7 @@ public class MergeRoute {
   // es wird eine neue Route getestet, die die Richtung Route1 zu Route 2 aufrecht erhaltet
   private Optional<Pair<Route, Double>> mergeTwoRoutes(Route route1, Route route2) {
     if (route1.getDemandOfRoute() + route2.getDemandOfRoute() > problemInstance.getLoadCapacity()) {
-      Optional.empty();
+      return Optional.empty();
     }
 
     Car car = new Car(problemInstance, distanceHolder);
