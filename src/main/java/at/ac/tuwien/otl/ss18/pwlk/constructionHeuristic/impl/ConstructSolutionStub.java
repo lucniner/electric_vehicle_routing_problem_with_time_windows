@@ -41,7 +41,6 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
 
     createPendelRoutes2();
     solutionInstance.setRoutes(pendelRoutes);
-    //TODO wieder hinzufügen
     solutionInstance = new MergeRoute(this.problemInstance, this.distanceHolder, solutionInstance).mergeRoutes();
     return Optional.of(solutionInstance);
   }
@@ -49,7 +48,7 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
   private void createPendelRoutes2() throws EvrptwRunException {
     ModifyRoute modifyRoute = new ModifyRoute(distanceHolder, problemInstance);
     for (Customer customer : problemInstance.getCustomers()) {
-      Car car = new Car(problemInstance);
+      Car car = new Car(problemInstance, distanceHolder);
       LinkedList<AbstractNode> routeList = new LinkedList<>();
       routeList.add(problemInstance.getDepot());
       routeList.add(customer);

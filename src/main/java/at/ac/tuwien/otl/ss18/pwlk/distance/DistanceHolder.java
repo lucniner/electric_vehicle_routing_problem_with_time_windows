@@ -14,8 +14,8 @@ import java.util.stream.Stream;
 public class DistanceHolder {
 
 
-  Map<AbstractNode, List<Pair<AbstractNode, Double>>> interNodeDistances = new HashMap<>();
-  Map<Pair<AbstractNode, AbstractNode>, List<Pair<AbstractNode, Double>>> chargingStationsByNode = new HashMap<>();
+  private double[][] interNodeDistancesArray;
+  private List[][] chargingStationsByNodesArray;
 
   private final Map<Customer, Double> customerDepotDistances = new HashMap<>();
   private final Map<Customer, List<Pair<AbstractNode, Double>>> interCustomerDistances =
@@ -38,6 +38,10 @@ public class DistanceHolder {
     calculateInterNodeDistances();
   }
 
+  public double getInterNodeDistance(AbstractNode from, AbstractNode to) {
+    return interNodeDistancesArray[from.getIndex()][to.getIndex()];
+  }
+
   // calculate node to node distances
   private void calculateInterNodeDistances() {
     List<AbstractNode> list = Stream.concat(
@@ -46,29 +50,27 @@ public class DistanceHolder {
     ).collect(Collectors.toList());
     list.add(problemInstance.getDepot());
 
+    interNodeDistancesArray = new double[list.size()][list.size()];
+    chargingStationsByNodesArray = new List[list.size()][list.size()];
+
     for (final AbstractNode fromNode : list) {
-      final List<Pair<AbstractNode, Double>> distances = new ArrayList<>();
       for (final AbstractNode toNode : list) {
-        // calculate distance
         final double distance =
                 DistanceCalculator.calculateDistanceBetweenNodes(fromNode, toNode);
-        distances.add(new Pair<>(toNode, distance));
-
-        // calculate charging stations
+        interNodeDistancesArray[fromNode.getIndex()][toNode.getIndex()] = distance;
         calculateChargingStationsByNode(fromNode, toNode);
       }
-      interNodeDistances.put(fromNode, distances);
     }
   }
 
   private void calculateChargingStationsByNode(AbstractNode from, AbstractNode to) {
     List<Pair<AbstractNode, Double>>  list =
             calculateNearestRechargingStationsForCustomerInDistance(from, to);
-    chargingStationsByNode.put(new Pair(from, to), list);
+    chargingStationsByNodesArray[from.getIndex()][to.getIndex()] = list;
   }
 
   public List<Pair<AbstractNode, Double>> getNearestRechargingStationsForCustomerInDistance(AbstractNode from, AbstractNode to) {
-    return chargingStationsByNode.get(new Pair(from, to));
+    return chargingStationsByNodesArray[from.getIndex()][to.getIndex()];
   }
 
 
@@ -133,7 +135,7 @@ public class DistanceHolder {
   }
 
   // add at first charging stations from the target, then charging stations from the departure node
-  public List<Pair<AbstractNode, Double>> calculateNearestRechargingStationsForCustomerInDistance(final AbstractNode targetNode, final AbstractNode maxDistanceNode) {
+  private List<Pair<AbstractNode, Double>> calculateNearestRechargingStationsForCustomerInDistance(final AbstractNode targetNode, final AbstractNode maxDistanceNode) {
     List<ChargingStations> chargingStationList = problemInstance.getChargingStations();
     double maxDistance =  DistanceCalculator.calculateDistanceBetweenNodes(targetNode, maxDistanceNode);
 
