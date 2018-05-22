@@ -55,11 +55,9 @@ public class DistanceHolder {
 
     for (final AbstractNode fromNode : list) {
       for (final AbstractNode toNode : list) {
-        // calculate distance
         final double distance =
                 DistanceCalculator.calculateDistanceBetweenNodes(fromNode, toNode);
         interNodeDistancesArray[fromNode.getIndex()][toNode.getIndex()] = distance;
-        // calculate charging stations
         calculateChargingStationsByNode(fromNode, toNode);
       }
     }

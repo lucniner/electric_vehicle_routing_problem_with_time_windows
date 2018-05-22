@@ -1,6 +1,5 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
-import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceCalculator;
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
@@ -80,7 +79,6 @@ public class Car {
 
   }
 
-  // für optimierung wsl besser wenn endcapacity in route steht
   public void driveRoute(List<AbstractNode> route) throws BatteryViolationException, TimewindowViolationException {
     AbstractNode lastNode = null;
     for (AbstractNode abstractNode : route) {
