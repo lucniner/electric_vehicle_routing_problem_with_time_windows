@@ -22,6 +22,7 @@ public class MergeRoute {
   private SolutionInstance solutionInstance;
 
   private Map hopeLessMerge = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
+  private Map<Pair<Route, Route>, Pair<Route,Double>> alreadyComputed = new ConcurrentHashMap<>();
 
   public MergeRoute(ProblemInstance problemInstance, DistanceHolder distanceHolder, SolutionInstance solutionInstance) {
     this.problemInstance = problemInstance;
@@ -88,10 +89,17 @@ public class MergeRoute {
                 route1p = route1.copyInverseRoute();
                 route2p = route2.copyInverseRoute();
               }
-              Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
-              if (newRoute.isPresent()) {
-                savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
+              if (alreadyComputed.containsKey(new Pair(route1p, route2p))) {
+                Pair<Route, Double> newRoute = alreadyComputed.get(new Pair(route1p, route2p));
+                savings.put(new Pair(route1p, route2p), new Pair(newRoute.getKey(), newRoute.getValue()));
                 hopeless = false;
+              } else {
+                Optional<Pair<Route, Double>> newRoute = mergeTwoRoutes(route1p, route2p);
+                if (newRoute.isPresent()) {
+                  alreadyComputed.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
+                  savings.put(new Pair(route1p, route2p), new Pair(newRoute.get().getKey(), newRoute.get().getValue()));
+                  hopeless = false;
+                }
               }
             }
             if (hopeless) {
