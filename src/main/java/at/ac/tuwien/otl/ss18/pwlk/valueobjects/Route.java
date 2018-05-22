@@ -64,13 +64,13 @@ public class Route {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     final Route route = (Route) o;
-    return Objects.equals(this.distance, route.distance) &&
+    return //Objects.equals(this.distance, route.distance) &&
             Objects.equals(this.route, route.route);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(distance, route);
+    return Objects.hash(route);
   }
 
   @Override

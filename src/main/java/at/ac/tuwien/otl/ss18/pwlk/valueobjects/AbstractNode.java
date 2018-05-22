@@ -42,22 +42,28 @@ public abstract class AbstractNode {
     return serviceTime;
   }
 
+  public int getIndex() {
+    return index;
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     final AbstractNode that = (AbstractNode) o;
-    return Double.compare(that.demand, demand) == 0 &&
-            Double.compare(that.serviceTime, serviceTime) == 0 &&
-            Objects.equals(id, that.id) &&
-            Objects.equals(location, that.location) &&
-            Objects.equals(timeWindow, that.timeWindow);
+    return //Double.compare(that.demand, demand) == 0 &&
+            //Double.compare(that.serviceTime, serviceTime) == 0 &&
+            //Objects.equals(id, that.id) //&&
+            //Objects.equals(location, that.location) &&
+            //Objects.equals(timeWindow, that.timeWindow);
+            index == that.index;
   }
 
   @Override
   public int hashCode() {
 
-    return Objects.hash(id, location, demand, timeWindow, serviceTime);
+    return Objects.hash(index);
+    //return Objects.hash(id, location, demand, timeWindow, serviceTime);
   }
 
   @Override

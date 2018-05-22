@@ -1,6 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceCalculator;
+import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
@@ -11,19 +12,21 @@ import java.util.List;
 
 public class Car {
   private final ProblemInstance problemInstance;
+  private final DistanceHolder distanceHolder;
   private double currentBatteryCapacity;
   private double currentTime;
   private double currentDistance;
 
-  public Car(ProblemInstance problemInstance) {
+  public Car(ProblemInstance problemInstance, DistanceHolder distanceHolder) {
     this.problemInstance = problemInstance;
+    this.distanceHolder = distanceHolder;
     this.currentBatteryCapacity = problemInstance.getBatteryCapacity();
     this.currentTime = problemInstance.getDepot().getTimeWindow().getReadyTime();
     this.currentDistance = 0;
   }
 
   public Car cloneCar() {
-    Car newCar = new Car(problemInstance);
+    Car newCar = new Car(problemInstance, distanceHolder);
     newCar.currentBatteryCapacity = this.currentBatteryCapacity;
     newCar.currentTime = this.currentTime;
     newCar.currentDistance = this.currentDistance;
@@ -46,7 +49,7 @@ public class Car {
   }
 
   private void moveCar(AbstractNode departure, AbstractNode arrival) throws BatteryViolationException, TimewindowViolationException {
-    double distance = DistanceCalculator.calculateDistanceBetweenNodes(departure, arrival);
+    double distance = distanceHolder.getInterNodeDistance(departure, arrival);
     currentTime += distance / problemInstance.getAverageVelocity(); // travel time = distance/velocity
     currentBatteryCapacity -= problemInstance.getChargeConsumptionRate() * distance; // subtract used battery capacity
     currentDistance += distance; // add travelled distance to total travelled distance

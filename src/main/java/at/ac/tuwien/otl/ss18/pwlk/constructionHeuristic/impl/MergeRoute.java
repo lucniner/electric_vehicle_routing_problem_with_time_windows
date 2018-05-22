@@ -67,12 +67,10 @@ public class MergeRoute {
 
     // vllt statt check von allen routen mit allen schon die infeasible routes weggeben?
     // die schon weggefiltert worden sind mit den constraints vom paper
-    // -> man braucht aber eine method um zu checken ob die distanz möglich ist (nicht nur zwischen 2 customer)
     solutionInstance.getRoutes().parallelStream().forEach((route1) -> {
       for (final Route route2 : solutionInstance.getRoutes()) {
         if ((!route1.equals(route2))) { // route1 und route2 sollen unterschiedlich sein, man kann nicht zwei gleiche mergen
           if (!hopeLessMerge.containsKey(new Pair(route1, route2))) {
-          //if (!(Boolean)hopeLessMerge.get(new Pair(route1.copyRoute(), route2.copyRoute()))) {
             boolean hopeless = true;
             for (int i = 0; i < 4; i++) { // try all different possibilities of two routes (normal, reverse => 4 combs)
               Route route1p;
@@ -112,7 +110,7 @@ public class MergeRoute {
       Optional.empty();
     }
 
-    Car car = new Car(problemInstance);
+    Car car = new Car(problemInstance, distanceHolder);
     Route firstRoute;
     firstRoute = route1.copyRoute();
     // delete end depot from first route

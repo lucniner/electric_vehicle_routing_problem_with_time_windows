@@ -65,7 +65,7 @@ public class ModifyRoute {
     Collections.reverse(list);
     for (Pair<AbstractNode, Double> chargingStations : list) {
       try {
-        newCar = new Car(problemInstance);
+        newCar = new Car(problemInstance, distanceHolder);
         newRoute = (LinkedList<AbstractNode>) routeList.clone();
         newRoute.add(newRoute.size()-2, chargingStations.getKey());
         newCar.driveRoute(newRoute);
@@ -85,7 +85,7 @@ public class ModifyRoute {
     for (Pair<AbstractNode, Double> chargingStation1 : list2) {
       for (Pair<AbstractNode, Double> chargingStation2 : list) {
         try {
-          newCar = new Car(problemInstance);
+          newCar = new Car(problemInstance, distanceHolder);
           newRoute = (LinkedList<AbstractNode>) routeList.clone();
           newRoute.add(newRoute.size()-2, chargingStation1.getKey());
           newRoute.add(newRoute.size()-1, chargingStation2.getKey());
