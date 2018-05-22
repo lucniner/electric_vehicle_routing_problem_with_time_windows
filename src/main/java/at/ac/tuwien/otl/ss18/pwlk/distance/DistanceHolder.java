@@ -2,10 +2,7 @@ package at.ac.tuwien.otl.ss18.pwlk.distance;
 
 import at.ac.tuwien.otl.ss18.pwlk.constraints.ConstraintsChecker;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ChargingStations;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Customer;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +37,22 @@ public class DistanceHolder {
 
   public double getInterNodeDistance(AbstractNode from, AbstractNode to) {
     return interNodeDistancesArray[from.getIndex()][to.getIndex()];
+  }
+
+  public double getMaxDistanceToDepot(){
+    Depot depot = problemInstance.getDepot();
+
+    double maxDistance = 0;
+
+    for(int i = 0; i < interNodeDistancesArray[depot.getIndex()].length; i++) {
+      double curr_distance = interNodeDistancesArray[depot.getIndex()][i];
+
+      if (curr_distance > maxDistance) {
+        maxDistance = curr_distance;
+      }
+    }
+
+    return maxDistance;
   }
 
   // calculate node to node distances

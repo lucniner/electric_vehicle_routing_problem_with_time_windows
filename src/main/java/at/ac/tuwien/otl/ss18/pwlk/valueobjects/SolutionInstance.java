@@ -17,4 +17,14 @@ public class SolutionInstance {
   public double getDistanceSum() {
     return routes.stream().mapToDouble(Route::getDistance).sum();
   }
+
+  public SolutionInstance copy() {
+    SolutionInstance solutionInstance = new SolutionInstance();
+    solutionInstance.routes = new ArrayList<>();
+
+    for (Route route : routes) {
+      solutionInstance.routes.add(route.copyRoute());
+    }
+    return solutionInstance;
+  }
 }
