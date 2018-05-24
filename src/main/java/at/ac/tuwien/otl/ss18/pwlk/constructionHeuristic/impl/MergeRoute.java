@@ -35,7 +35,7 @@ public class MergeRoute {
   public SolutionInstance mergeRoutes() {
     SolutionInstance bestSolutionInstance = solutionInstance;
 
-    for (int i = 0; i<4; i++) {
+    for (int i = 0; i<1; i++) {
       // means that merges far away from depot are better (0 is off)
       double benefit_factor = i/3;
       SolutionInstance currSoluctionInstance = solutionInstance.copy();
@@ -166,7 +166,7 @@ public class MergeRoute {
     Route remainingRoute;
     List<Pair<Car, List<AbstractNode>>> possibleSolutions = new ArrayList<>();
 
-    int maxIteration = 10;
+    int maxIteration = 7;
     for(int i=0; i<maxIteration; i++) {
       remainingRoute = route2.copyRoute();
       newCar = car.cloneCar();
