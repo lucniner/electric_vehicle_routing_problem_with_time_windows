@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class ConstructSolutionStub extends AbstractConstructSolution {
+public class ConstructHeuristic extends AbstractConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private List<Route> pendelRoutes;
@@ -20,14 +20,14 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
   private DistanceHolder distanceHolder;
 
   @Override
-  Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) throws EvrptwRunException {
+  Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance, DistanceHolder distanceHolder) throws EvrptwRunException {
     logger.info("Construct solution with algorithm 'Stub'");
     SolutionInstance solutionInstance = new SolutionInstance();
     this.pendelRoutes = new ArrayList<>();
     this.depot = problemInstance.getDepot();
     this.batteryCapacity = problemInstance.getBatteryCapacity();
     this.problemInstance = problemInstance;
-    this.distanceHolder = new DistanceHolder(problemInstance);
+    this.distanceHolder = distanceHolder;
 
     // 1. distance holder ausführen
     // 2. (13-16) constraints in eigene klasse -> DistanceHolder rein, DistanceHolder raus

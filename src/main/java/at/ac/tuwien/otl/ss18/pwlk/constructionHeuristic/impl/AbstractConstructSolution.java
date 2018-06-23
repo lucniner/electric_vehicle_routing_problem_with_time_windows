@@ -1,6 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
+import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwRunException;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
@@ -18,16 +19,16 @@ public abstract class AbstractConstructSolution implements IConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout) throws EvrptwRunException{
+  public Optional<SolutionInstance> constructSolution(ProblemInstance problemInstance, int timeout, DistanceHolder distanceHolder) throws EvrptwRunException {
     SimpleTimeLimiter limiter = SimpleTimeLimiter.create(Executors.newCachedThreadPool());
 
     Optional<SolutionInstance> solutionInstance = Optional.empty();
 
     try {
       if (timeout != 0) {
-        solutionInstance = limiter.callWithTimeout(() -> runAlgorithm(problemInstance), timeout, TimeUnit.SECONDS);
+        solutionInstance = limiter.callWithTimeout(() -> runAlgorithm(problemInstance, distanceHolder), timeout, TimeUnit.SECONDS);
       } else { // if timeout is zero, then timeout is deactivated
-        solutionInstance = runAlgorithm(problemInstance);
+        solutionInstance = runAlgorithm(problemInstance, distanceHolder);
       }
 
     } catch (ExecutionException | InterruptedException e) {
@@ -39,5 +40,5 @@ public abstract class AbstractConstructSolution implements IConstructSolution {
     return solutionInstance;
   }
 
-  abstract Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) throws EvrptwRunException;
+  abstract Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance, DistanceHolder distanceHolder) throws EvrptwRunException;
 }

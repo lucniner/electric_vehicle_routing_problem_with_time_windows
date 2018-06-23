@@ -1,11 +1,8 @@
-package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
+package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ChargingStations;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 
 import java.util.List;
 

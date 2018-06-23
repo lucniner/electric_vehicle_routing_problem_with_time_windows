@@ -2,11 +2,12 @@ package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 import java.util.*;
 
-public class Route {
+public class Route implements Comparable<Route> {
   private double distance;
   private List<AbstractNode> route = new LinkedList<>();
 
   public double getDistance() {
+
     return distance;
   }
 
@@ -81,5 +82,10 @@ public class Route {
       sb.append(", ");
     }
     return sb.substring(0, sb.length() - 2);
+  }
+
+  @Override
+  public int compareTo(Route route) {
+    return this.distance - route.getDistance() > 0 ? 1 : -1;
   }
 }
