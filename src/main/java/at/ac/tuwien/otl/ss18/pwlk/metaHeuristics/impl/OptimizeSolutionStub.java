@@ -32,6 +32,23 @@ public class OptimizeSolutionStub extends AbstractOptimizeSolution {
         });
 
         optimizedSolution.setRoutes(optimizedRoutes);
-        return Optional.of(optimizedSolution);
+
+        SolutionInstance bestSolution = new SolutionInstance();
+
+        final List<Route> bestRoutes = new ArrayList<>();
+
+        optimizedSolution.getRoutes().forEach(r -> {
+            BestOrOptExchange exchange = new BestOrOptExchange(r, problemInstance, distanceHolder);
+            final Optional<Route> route = exchange.optimizeRoute();
+            if (route.isPresent()) {
+                bestRoutes.add(route.get());
+            } else {
+                bestRoutes.add(r);
+            }
+        });
+
+        bestSolution.setRoutes(bestRoutes);
+
+        return Optional.of(bestSolution);
     }
 }
