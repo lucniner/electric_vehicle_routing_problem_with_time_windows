@@ -45,10 +45,9 @@ public class TimeWindow {
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("valueobjects.TimeWindow{");
+    final StringBuilder sb = new StringBuilder();
     sb.append("readyTime=").append(readyTime);
     sb.append(", dueTime=").append(dueTime);
-    sb.append('}');
     return sb.toString();
   }
 }

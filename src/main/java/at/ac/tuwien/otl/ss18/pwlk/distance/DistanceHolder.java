@@ -2,17 +2,17 @@ package at.ac.tuwien.otl.ss18.pwlk.distance;
 
 import at.ac.tuwien.otl.ss18.pwlk.constraints.ConstraintsChecker;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ChargingStations;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Customer;
-import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DistanceHolder {
 
 
+  private double[][] interNodeDistancesArray;
+  private List[][] chargingStationsByNodesArray;
 
   private final Map<Customer, Double> customerDepotDistances = new HashMap<>();
   private final Map<Customer, List<Pair<AbstractNode, Double>>> interCustomerDistances =
@@ -31,7 +31,61 @@ public class DistanceHolder {
     calculateCustomerToCustomerDistances();
     calculateCustomerToDepotDistances();
     calculateCustomerToRechargingDistances();
+
+    calculateInterNodeDistances();
   }
+
+  public double getInterNodeDistance(AbstractNode from, AbstractNode to) {
+    return interNodeDistancesArray[from.getIndex()][to.getIndex()];
+  }
+
+  public double getMaxDistanceToDepot(){
+    Depot depot = problemInstance.getDepot();
+
+    double maxDistance = 0;
+
+    for(int i = 0; i < interNodeDistancesArray[depot.getIndex()].length; i++) {
+      double curr_distance = interNodeDistancesArray[depot.getIndex()][i];
+
+      if (curr_distance > maxDistance) {
+        maxDistance = curr_distance;
+      }
+    }
+
+    return maxDistance;
+  }
+
+  // calculate node to node distances
+  private void calculateInterNodeDistances() {
+    List<AbstractNode> list = Stream.concat(
+            problemInstance.getCustomers().stream(),
+            problemInstance.getChargingStations().stream()
+    ).collect(Collectors.toList());
+    list.add(problemInstance.getDepot());
+
+    interNodeDistancesArray = new double[list.size()][list.size()];
+    chargingStationsByNodesArray = new List[list.size()][list.size()];
+
+    for (final AbstractNode fromNode : list) {
+      for (final AbstractNode toNode : list) {
+        final double distance =
+                DistanceCalculator.calculateDistanceBetweenNodes(fromNode, toNode);
+        interNodeDistancesArray[fromNode.getIndex()][toNode.getIndex()] = distance;
+        calculateChargingStationsByNode(fromNode, toNode);
+      }
+    }
+  }
+
+  private void calculateChargingStationsByNode(AbstractNode from, AbstractNode to) {
+    List<Pair<AbstractNode, Double>>  list =
+            calculateNearestRechargingStationsForCustomerInDistance(from, to);
+    chargingStationsByNodesArray[from.getIndex()][to.getIndex()] = list;
+  }
+
+  public List<Pair<AbstractNode, Double>> getNearestRechargingStationsForCustomerInDistance(AbstractNode from, AbstractNode to) {
+    return chargingStationsByNodesArray[from.getIndex()][to.getIndex()];
+  }
+
 
   private void calculateCustomerToDepotDistances() {
     final AbstractNode depot = problemInstance.getDepot();
@@ -91,6 +145,34 @@ public class DistanceHolder {
     final OptionalDouble minDistance =
             calculateMinDistanceInList(customerChargingStationDistances.get(from));
     return calculateMinNodeBasedOnDistance(customerChargingStationDistances.get(from), minDistance);
+  }
+
+  // add at first charging stations from the target, then charging stations from the departure node
+  private List<Pair<AbstractNode, Double>> calculateNearestRechargingStationsForCustomerInDistance(final AbstractNode targetNode, final AbstractNode maxDistanceNode) {
+    List<ChargingStations> chargingStationList = problemInstance.getChargingStations();
+    double maxDistance =  DistanceCalculator.calculateDistanceBetweenNodes(targetNode, maxDistanceNode);
+
+    List<Pair<AbstractNode, Double>> stations = new ArrayList<>();
+    for(ChargingStations chargingStations : chargingStationList) {
+      double distance = DistanceCalculator.calculateDistanceBetweenNodes(targetNode, chargingStations);
+
+      if (distance < maxDistance) {
+        stations.add(new Pair(chargingStations, distance));
+      }
+    }
+
+    for(ChargingStations chargingStations : chargingStationList) {
+      double distance = DistanceCalculator.calculateDistanceBetweenNodes(maxDistanceNode, chargingStations);
+      double actualDistance = DistanceCalculator.calculateDistanceBetweenNodes(targetNode, chargingStations);
+
+      if (distance < maxDistance) {
+        stations.add(new Pair(chargingStations, actualDistance));
+      }
+    }
+
+    Collections.sort(stations, Comparator.comparing(Pair::getValue));
+
+    return stations;
   }
 
   private OptionalDouble calculateMinDistanceInList(

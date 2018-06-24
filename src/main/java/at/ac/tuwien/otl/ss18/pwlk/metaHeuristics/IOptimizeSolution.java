@@ -1,5 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics;
 
+import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 
 import java.util.Optional;
@@ -11,5 +13,5 @@ public interface IOptimizeSolution {
    * @param timeout
    * @return
    */
-  Optional<SolutionInstance> optimizeSolution(SolutionInstance solutionInstance, int timeout);
+  Optional<SolutionInstance> optimizeSolution(SolutionInstance solutionInstance, int timeout, ProblemInstance problemInstance, DistanceHolder distanceHolder);
 }

@@ -19,7 +19,7 @@ public class Main {
     }
     evrptw.evrptwRun();
 
-    System.exit(0);
+    //  System.exit(0);
   }
 
   private static CommandLine parseArguments(String[] args) {

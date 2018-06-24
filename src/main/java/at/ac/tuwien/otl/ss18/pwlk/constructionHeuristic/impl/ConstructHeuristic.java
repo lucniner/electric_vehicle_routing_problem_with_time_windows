@@ -2,6 +2,7 @@ package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceCalculator;
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwRunException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 import org.slf4j.Logger;
@@ -9,23 +10,24 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class ConstructSolutionStub extends AbstractConstructSolution {
+public class ConstructHeuristic extends AbstractConstructSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final List<Route> pendelRoutes = new ArrayList<>();
 
+  private List<Route> pendelRoutes;
   private Depot depot;
   private double batteryCapacity;
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
 
   @Override
-  Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance) {
+  Optional<SolutionInstance> runAlgorithm(ProblemInstance problemInstance, DistanceHolder distanceHolder) throws EvrptwRunException {
     logger.info("Construct solution with algorithm 'Stub'");
-    final SolutionInstance solutionInstance = new SolutionInstance();
-    depot = problemInstance.getDepot();
-    batteryCapacity = problemInstance.getBatteryCapacity();
+    SolutionInstance solutionInstance = new SolutionInstance();
+    this.pendelRoutes = new ArrayList<>();
+    this.depot = problemInstance.getDepot();
+    this.batteryCapacity = problemInstance.getBatteryCapacity();
     this.problemInstance = problemInstance;
-    this.distanceHolder = new DistanceHolder(problemInstance);
+    this.distanceHolder = distanceHolder;
 
     // 1. distance holder ausführen
     // 2. (13-16) constraints in eigene klasse -> DistanceHolder rein, DistanceHolder raus
@@ -37,10 +39,29 @@ public class ConstructSolutionStub extends AbstractConstructSolution {
     //        best charging station (wo halt alle constraints passen)
     //    4.2 check time window (in eigener klasse, auch in klasse von punkt 2)
 
-    createPendelRoutes();
+    createPendelRoutes2();
     solutionInstance.setRoutes(pendelRoutes);
-
+    solutionInstance = new MergeRoute(this.problemInstance, this.distanceHolder, solutionInstance).mergeRoutes();
     return Optional.of(solutionInstance);
+  }
+
+  private void createPendelRoutes2() throws EvrptwRunException {
+    ModifyRoute modifyRoute = new ModifyRoute(distanceHolder, problemInstance);
+    for (Customer customer : problemInstance.getCustomers()) {
+      Car car = new Car(problemInstance, distanceHolder);
+      LinkedList<AbstractNode> routeList = new LinkedList<>();
+      routeList.add(problemInstance.getDepot());
+      routeList.add(customer);
+
+      Pair<Car, LinkedList<AbstractNode>> newRoute = modifyRoute.addChargingStation(car, routeList);
+      routeList.add(problemInstance.getDepot());
+      newRoute = modifyRoute.addChargingStation(newRoute.getKey(), newRoute.getValue());
+
+      Route route = new Route();
+      route.setDistance(newRoute.getKey().getCurrentDistance());
+      route.setRoute(newRoute.getValue());
+      pendelRoutes.add(route);
+    }
   }
 
   private void createPendelRoutes() {

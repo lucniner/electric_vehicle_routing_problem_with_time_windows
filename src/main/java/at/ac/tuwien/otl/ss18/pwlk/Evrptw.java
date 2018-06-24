@@ -1,8 +1,10 @@
 package at.ac.tuwien.otl.ss18.pwlk;
 
 import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.IConstructSolution;
-import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl.ConstructSolutionStub;
+import at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl.ConstructHeuristic;
+import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwInitializeException;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.EvrptwRunException;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.IOptimizeSolution;
 import at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl.OptimizeSolutionStub;
 import at.ac.tuwien.otl.ss18.pwlk.reader.ProblemReader;
@@ -24,7 +26,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 import static java.lang.Math.toIntExact;
 
@@ -138,7 +143,7 @@ public class Evrptw {
     this.timeout = timeout;
     this.solutionVerifier = solutionVerifier;
     this.problemInstances = problemInstances;
-    this.constructSolution = new ConstructSolutionStub(); // choose algorithm to construct routes
+    this.constructSolution = new ConstructHeuristic(); // choose algorithm to construct routes
     this.optimizeSolution = new OptimizeSolutionStub(); // choose algorithm to optimize routes
     this.optimize = optimize;
     this.nbConstruct = nbConstruct;
@@ -150,26 +155,30 @@ public class Evrptw {
     report.setConstructAlgorithmName(constructSolution.getClass().getSimpleName());
     report.setOptimizeAlgorithmName(optimizeSolution.getClass().getSimpleName());
 
-    for(String instancePath : problemInstances.keySet()) {
-      InstanceReport instanceReport = runInstance(instancePath, problemInstances.get(instancePath));
-      report.setInstanceReport(instanceReport);
+    try {
+      for(String instancePath : problemInstances.keySet()) {
+        InstanceReport instanceReport = runInstance(instancePath, problemInstances.get(instancePath));
+        report.setInstanceReport(instanceReport);
+      }
+    } catch (EvrptwRunException e) {
+      logger.error("Exception occured while running algorithm: " + e.getLocalizedMessage());
     }
 
     logger.info(report.toString());
   }
 
-  private InstanceReport runInstance(String instancePath, ProblemInstance problemInstance) {
+  private InstanceReport runInstance(String instancePath, ProblemInstance problemInstance) throws EvrptwRunException {
 
     String instanceName = instancePath.substring(instancePath.lastIndexOf("/")+1, instancePath.lastIndexOf("_"));
 
     InstanceReport instanceReport = new InstanceReport(instanceName);
 
     Optional<SolutionInstance> solutionInstance = Optional.empty();
-
+    DistanceHolder distanceHolder = new DistanceHolder(problemInstance);
     for(int i = 0; i<nbConstruct; i++) {
       // Construct solution with construction heuristic
       Instant begin = Instant.now();
-      solutionInstance = constructSolution.constructSolution(problemInstance, timeout);
+      solutionInstance = constructSolution.constructSolution(problemInstance, timeout, distanceHolder);
       Instant end = Instant.now();
 
       logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
@@ -197,7 +206,7 @@ public class Evrptw {
       for (int i = 0; i < nbOptimize; i++) {
         // Optimize solution with metaheuristic
         Instant begin = Instant.now();
-        optimizedSolution = optimizeSolution.optimizeSolution(solutionInstance.get(), timeout);
+        optimizedSolution = optimizeSolution.optimizeSolution(solutionInstance.get(), timeout, problemInstance, distanceHolder);
         Instant end = Instant.now();
 
         logger.info("Elapsed time: " + (end.getEpochSecond() - begin.getEpochSecond()) + " Seconds");
@@ -218,6 +227,10 @@ public class Evrptw {
       logger.info("Cannot check for valid solution because there is no solution available");
       logger.info("Note: Check for invalid solutions are only made for the last run");
       return instanceReport;
+    } else {
+      //final SolutionInstance solution = optimizedSolution.get();
+      //final InstanceVisualizer visualizer = new InstanceVisualizer(problemInstance, solution);
+      //visualizer.visualize();
     }
 
     final String tempSolutionFile;

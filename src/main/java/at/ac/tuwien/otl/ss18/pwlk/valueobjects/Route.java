@@ -2,11 +2,12 @@ package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 import java.util.*;
 
-public class Route {
+public class Route implements Comparable<Route> {
   private double distance;
   private List<AbstractNode> route = new LinkedList<>();
 
   public double getDistance() {
+
     return distance;
   }
 
@@ -44,6 +45,35 @@ public class Route {
     return route.contains(node);
   }
 
+  public Route copyInverseRoute() {
+    Route route = new Route();
+    route.distance = this.distance;
+    route.route = new LinkedList<>(this.route);
+    Collections.reverse(route.route);
+    return route;
+  }
+
+  public Route copyRoute() {
+    Route route = new Route();
+    route.distance = this.distance;
+    route.route = new LinkedList<>(this.route);
+    return route;
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    final Route route = (Route) o;
+    return //Objects.equals(this.distance, route.distance) &&
+            Objects.equals(this.route, route.route);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(route);
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -52,5 +82,10 @@ public class Route {
       sb.append(", ");
     }
     return sb.substring(0, sb.length() - 2);
+  }
+
+  @Override
+  public int compareTo(Route route) {
+    return this.distance - route.getDistance() > 0 ? 1 : -1;
   }
 }
