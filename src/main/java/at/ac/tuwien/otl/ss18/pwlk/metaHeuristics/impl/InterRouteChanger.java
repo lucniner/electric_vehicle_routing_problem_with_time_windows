@@ -1,0 +1,93 @@
+package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
+
+import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
+import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
+import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
+import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class InterRouteChanger {
+
+  private final List<Route> routes;
+  private final DistanceHolder holder;
+  private final ProblemInstance problemInstance;
+
+  public InterRouteChanger(
+          final List<Route> routes,
+          final DistanceHolder holder,
+          final ProblemInstance problemInstance) {
+    this.routes = routes;
+    this.holder = holder;
+    this.problemInstance = problemInstance;
+  }
+
+  public List<Route> optimizeRoutes() {
+
+    final List<Route> optimizedRoutes = new ArrayList<>();
+    for (final Route route : routes) {
+      final List<AbstractNode> optimizedNodeRoute = new ArrayList<>();
+      for (final AbstractNode node : route.getRoute()) {
+        optimizedNodeRoute.add(node);
+        if (node instanceof Customer) {
+          final List<Pair<AbstractNode, Double>> neighbours =
+                  holder.getNearestCustomersForCustomer(node);
+          for (final Pair<AbstractNode, Double> p : neighbours) {
+            if (!neighbourIsOnSameRoute(route.getRoute(), p.getKey())) {
+              if (customerCanBeInsertedOnRoute(new ArrayList<>(optimizedNodeRoute), p.getKey())) {
+                removeCustomerFromRoute(p.getKey());
+                optimizedNodeRoute.add(p.getKey());
+              }
+            }
+          }
+        }
+      }
+
+      Car car = new Car(problemInstance, holder);
+      try {
+        final Route optimizedRoute = new Route();
+        car.driveRoute(optimizedNodeRoute);
+        optimizedRoute.setDistance(car.getCurrentDistance());
+        optimizedRoute.setRoute(optimizedNodeRoute);
+        optimizedRoutes.add(optimizedRoute);
+      } catch (TimewindowViolationException e) {
+        e.printStackTrace();
+      } catch (BatteryViolationException e) {
+        e.printStackTrace();
+      }
+    }
+
+    return optimizedRoutes;
+  }
+
+  private boolean customerCanBeInsertedOnRoute(
+          final List<AbstractNode> route, final AbstractNode node) {
+    route.add(node);
+    Car car = new Car(problemInstance, holder);
+    try {
+      car.driveRoute(route);
+      return true;
+    } catch (TimewindowViolationException e) {
+      return false;
+    } catch (BatteryViolationException e) {
+      return false;
+    }
+  }
+
+  private void removeCustomerFromRoute(final AbstractNode node) {
+    for (final Route route : routes) {
+      for (final AbstractNode c : new ArrayList<>(route.getRoute())) {
+        if (c.equals(node)) {
+          route.getRoute().remove(c);
+        }
+      }
+    }
+  }
+
+  private boolean neighbourIsOnSameRoute(
+          final List<AbstractNode> route, final AbstractNode neighbour) {
+    return route.contains(neighbour);
+  }
+}
