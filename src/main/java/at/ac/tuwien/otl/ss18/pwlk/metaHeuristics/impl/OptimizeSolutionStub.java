@@ -54,6 +54,16 @@ public class OptimizeSolutionStub extends AbstractOptimizeSolution {
             bestSolution = sol.get();
         }
 
+        sol = new Exchange(bestSolution, problemInstance, distanceHolder).optimize();
+        if (sol.isPresent()) {
+            bestSolution = sol.get();
+        }
+
+        sol = new CrossExchange(bestSolution, problemInstance, distanceHolder).optimize();
+        if (sol.isPresent()) {
+            bestSolution = sol.get();
+        }
+
         return Optional.of(bestSolution);
     }
 }
