@@ -64,7 +64,7 @@ public class MergeRoute {
           }
         }
 
-        logger.info("Merge route "
+        logger.debug("Merge route "
                 + bestSaving.getKey().getKey().toString()
                 + " with route "
                 + bestSaving.getKey().getValue().toString());
