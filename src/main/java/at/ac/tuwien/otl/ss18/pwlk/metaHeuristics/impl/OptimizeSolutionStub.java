@@ -12,58 +12,105 @@ import java.util.List;
 import java.util.Optional;
 
 public class OptimizeSolutionStub extends AbstractOptimizeSolution {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Override
-    Optional<SolutionInstance> runAlgorithm(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
-        logger.info("Optimize solution with algorithm 'Stub'");
+  @Override
+  Optional<SolutionInstance> runAlgorithm(
+          SolutionInstance solutionInstance,
+          ProblemInstance problemInstance,
+          DistanceHolder distanceHolder) {
 
-        SolutionInstance optimizedSolution = new SolutionInstance();
-        final List<Route> optimizedRoutes = new ArrayList<>();
+    logger.info("Optimize solution with algorithm 'Stub'");
 
-        solutionInstance.getRoutes().forEach(r -> {
-            BestOrOptExchange exchange = new BestOrOptExchange(r, problemInstance, distanceHolder);
-            final Optional<Route> route = exchange.optimizeRoute();
-            if (route.isPresent()) {
-                optimizedRoutes.add(route.get());
-            } else {
-                optimizedRoutes.add(r);
-            }
-        });
+    SolutionInstance bestSolution = runOpts(solutionInstance, problemInstance, distanceHolder);
 
-        optimizedSolution.setRoutes(optimizedRoutes);
+    double bestDistance = Double.MAX_VALUE;
+    double currentDistance = bestSolution.getDistanceSum();
+    while (currentDistance < bestDistance) {
+      bestDistance = currentDistance;
 
-        SolutionInstance bestSolution = new SolutionInstance();
+      Optional<SolutionInstance> sol =
+              new Relocate(bestSolution, problemInstance, distanceHolder).optimize();
+      if (sol.isPresent() && sol.get().getDistanceSum() < bestDistance) {
+        logger.info("relocate found new best solution");
+        bestSolution = sol.get();
+      }
 
-        final List<Route> bestRoutes = new ArrayList<>();
+      sol = new Exchange(bestSolution, problemInstance, distanceHolder).optimize();
+      if (sol.isPresent() && sol.get().getDistanceSum() < bestDistance) {
+        logger.info("exchange found new best solution");
+        bestSolution = sol.get();
+      }
 
-        optimizedSolution.getRoutes().forEach(r -> {
-          BestTwoOptExchagne exchange = new BestTwoOptExchagne(r, problemInstance, distanceHolder);
-            final Optional<Route> route = exchange.optimizeRoute();
-            if (route.isPresent()) {
-                bestRoutes.add(route.get());
-            } else {
-                bestRoutes.add(r);
-            }
-        });
+      sol = new CrossExchange(bestSolution, problemInstance, distanceHolder).optimize();
+      if (sol.isPresent() && sol.get().getDistanceSum() < bestDistance) {
+        logger.info("cross exchange found new best solution");
+        bestSolution = sol.get();
+      }
 
-        bestSolution.setRoutes(bestRoutes);
-
-        Optional<SolutionInstance> sol = new Relocate(bestSolution, problemInstance, distanceHolder).optimize();
-        if (sol.isPresent()) {
-            bestSolution = sol.get();
-        }
-
-        sol = new Exchange(bestSolution, problemInstance, distanceHolder).optimize();
-        if (sol.isPresent()) {
-            bestSolution = sol.get();
-        }
-
-        sol = new CrossExchange(bestSolution, problemInstance, distanceHolder).optimize();
-        if (sol.isPresent()) {
-            bestSolution = sol.get();
-        }
-
-        return Optional.of(bestSolution);
+      currentDistance = bestSolution.getDistanceSum();
+      SolutionInstance instance = runOpts(bestSolution, problemInstance, distanceHolder);
+      if (instance.getDistanceSum() < bestDistance) {
+        logger.info("opts found new best solution");
+        bestSolution = instance;
+      }
     }
+    finalizeRoutes(bestSolution.getRoutes());
+
+    return Optional.of(bestSolution);
+  }
+
+  private void finalizeRoutes(final List<Route> routes) {
+    int i = 0;
+    for (final Route r : new ArrayList<>(routes)) {
+      if (r.getRoute().size() == 2) {
+        routes.remove(i--);
+      }
+      i++;
+    }
+  }
+
+  private SolutionInstance runOpts(
+          final SolutionInstance solutionInstance,
+          ProblemInstance problemInstance,
+          DistanceHolder distanceHolder) {
+    SolutionInstance optimizedSolution = new SolutionInstance();
+    final List<Route> optimizedRoutes = new ArrayList<>();
+
+    solutionInstance
+            .getRoutes()
+            .forEach(
+                    r -> {
+                      BestOrOptExchange exchange =
+                              new BestOrOptExchange(r, problemInstance, distanceHolder);
+                      final Optional<Route> route = exchange.optimizeRoute();
+                      if (route.isPresent()) {
+                optimizedRoutes.add(route.get());
+                      } else {
+                optimizedRoutes.add(r);
+                      }
+                    });
+
+    optimizedSolution.setRoutes(optimizedRoutes);
+
+    SolutionInstance bestSolution = new SolutionInstance();
+
+    final List<Route> bestRoutes = new ArrayList<>();
+
+    optimizedSolution
+            .getRoutes()
+            .forEach(
+                    r -> {
+                      BestTwoOptExchagne exchange =
+                              new BestTwoOptExchagne(r, problemInstance, distanceHolder);
+                      final Optional<Route> route = exchange.optimizeRoute();
+                      if (route.isPresent()) {
+                bestRoutes.add(route.get());
+                      } else {
+                bestRoutes.add(r);
+                      }
+                    });
+    bestSolution.setRoutes(bestRoutes);
+    return bestSolution;
+  }
 }
