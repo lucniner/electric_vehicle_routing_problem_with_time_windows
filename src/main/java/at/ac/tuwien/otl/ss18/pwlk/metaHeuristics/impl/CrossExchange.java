@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Exchange {
+public class CrossExchange {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private SolutionInstance solutionInstance;
@@ -36,7 +36,7 @@ public class Exchange {
     }
   }
 
-  public Exchange(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
+  public CrossExchange(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
     this.solutionInstance = solutionInstance;
     this.problemInstance = problemInstance;
     this.distanceHolder = distanceHolder;
@@ -67,7 +67,7 @@ public class Exchange {
         }
       }
 
-      logger.debug("Exchange nodes");
+      logger.debug("Cross-Exchange nodes");
 
       List<Route> routeList = currSolutionInstance.getRoutes();
       routeList.add(bestSaving.getValue().route1);
@@ -123,20 +123,28 @@ public class Exchange {
 
     Optional<NewRoutes> bestRoutes = Optional.empty();
 
+    if (fromRoute.size() < 4 || toRoute.size() < 4 ) {
+      return Optional.empty();
+    }
+
     for (int i=1; i<fromRoute.size()-1; i++) {
       for (int j=1; j<toRoute.size()-1; j++) {
         List<AbstractNode> list1 = new ArrayList<>(fromRoute);
         List<AbstractNode> list2 = new ArrayList<>(toRoute);
         AbstractNode node1 = list1.remove(i);
+        AbstractNode node1b = list1.remove(i);
         AbstractNode node2 = list2.remove(j);
+        AbstractNode node2b = list2.remove(j);
+        list2.add(j, node1b);
         list2.add(j, node1);
+        list1.add(i, node2b);
         list1.add(i, node2);
 
-        if (route2.getDemandOfRoute() + node1.getDemand() - node2.getDemand() > problemInstance.getLoadCapacity()) {
+        if (route2.getDemandOfRoute() + node1.getDemand() + node1b.getDemand() - node2.getDemand() - node2b.getDemand() > problemInstance.getLoadCapacity()) {
           continue;
         }
 
-        if (route1.getDemandOfRoute() + node2.getDemand() - node1.getDemand() > problemInstance.getLoadCapacity()) {
+        if (route1.getDemandOfRoute() + node2.getDemand() + node2b.getDemand() - node1.getDemand() - node1b.getDemand() > problemInstance.getLoadCapacity()) {
           continue;
         }
 
