@@ -93,22 +93,22 @@ public class Relocate {
     currSolution.getRoutes().parallelStream().forEach((route1) -> {
       for (final Route route2 : currSolution.getRoutes()) {
         if ((!route1.equals(route2))) {
-          if (!hopeLessRelocate.containsKey(new Pair(route1, route2))) {
+          if (!hopeLessRelocate.containsKey(new Pair<Route, Route>(route1, route2))) {
             boolean hopeless = true;
-            if (alreadyComputed.containsKey(new Pair(route1, route2))) {
-              NewRoutes newRoutes = alreadyComputed.get(new Pair(route1, route2));
-              savings.put(new Pair(route1, route2), newRoutes);
+            if (alreadyComputed.containsKey(new Pair<Route, Route>(route1, route2))) {
+              NewRoutes newRoutes = alreadyComputed.get(new Pair<Route, Route>(route1, route2));
+              savings.put(new Pair<Route, Route>(route1, route2), newRoutes);
               hopeless = false;
             } else {
               Optional<NewRoutes> newRoute = relocateNode(route1, route2);
               if (newRoute.isPresent()) {
-                alreadyComputed.put(new Pair(route1, route2), newRoute.get());
-                savings.put(new Pair(route1, route2), newRoute.get());
+                alreadyComputed.put(new Pair<Route, Route>(route1, route2), newRoute.get());
+                savings.put(new Pair<Route, Route>(route1, route2), newRoute.get());
                 hopeless = false;
               }
             }
             if (hopeless) {
-              hopeLessRelocate.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
+              hopeLessRelocate.put(new Pair<Route, Route>(route1.copyRoute(), route2.copyRoute()), true);
             }
           }
         }
