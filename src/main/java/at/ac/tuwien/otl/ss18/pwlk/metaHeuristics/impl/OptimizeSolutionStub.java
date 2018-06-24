@@ -49,6 +49,11 @@ public class OptimizeSolutionStub extends AbstractOptimizeSolution {
 
         bestSolution.setRoutes(bestRoutes);
 
+        Optional<SolutionInstance> sol = new Relocate(bestSolution, problemInstance, distanceHolder).optimize();
+        if (sol.isPresent()) {
+            bestSolution = sol.get();
+        }
+
         return Optional.of(bestSolution);
     }
 }

@@ -47,7 +47,7 @@ public class ModifyRoute {
       throw new EvrptwRunException("Customer is completely out of range");
     }
 
-    logger.info("Must add charging station for pendel route after customer");
+    logger.debug("Must add charging station for pendel route after customer");
 
     for (Pair<AbstractNode, Double> chargingStations : list) {
       try {
@@ -61,7 +61,7 @@ public class ModifyRoute {
       }
     }
 
-    logger.info("Must add charging station for pendel route before customer");
+    logger.debug("Must add charging station for pendel route before customer");
 
     Collections.reverse(list);
     for (Pair<AbstractNode, Double> chargingStations : list) {
@@ -77,7 +77,7 @@ public class ModifyRoute {
 
     }
 
-    logger.info("Must add charging station before and after customer");
+    logger.debug("Must add charging station before and after customer");
 
     List<Pair<AbstractNode, Double>> list2 = distanceHolder
             .getNearestRechargingStationsForCustomerInDistance(routeList.get(routeList.size()-1), routeList.get(routeList.size()-2));
