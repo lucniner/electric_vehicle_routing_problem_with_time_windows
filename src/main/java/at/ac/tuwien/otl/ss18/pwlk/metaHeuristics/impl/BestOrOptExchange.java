@@ -7,12 +7,17 @@ import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Car;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Route;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.PriorityQueue;
 
 public class BestOrOptExchange {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
 
     private final Route route;
     private final ProblemInstance problemInstance;
@@ -90,11 +95,13 @@ public class BestOrOptExchange {
         try {
             car.driveRoute(nodes);
             opt.setDistance(car.getCurrentDistance());
-
+            opt.setRoute(nodes);
             if (opt.getDistance() < route.getDistance()) {
                 routes.add(opt);
             }
-        } catch (BatteryViolationException | TimewindowViolationException e) {
+        } catch (BatteryViolationException e) {
+
+        } catch (TimewindowViolationException e) {
 
         }
     }

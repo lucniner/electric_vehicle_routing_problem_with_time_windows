@@ -127,8 +127,8 @@ public class CrossExchange {
       return Optional.empty();
     }
 
-    for (int i=1; i<fromRoute.size()-1; i++) {
-      for (int j=1; j<toRoute.size()-1; j++) {
+    for (int i = 1; i < fromRoute.size() - 2; i++) {
+      for (int j = 1; j < toRoute.size() - 2; j++) {
         List<AbstractNode> list1 = new ArrayList<>(fromRoute);
         List<AbstractNode> list2 = new ArrayList<>(toRoute);
         AbstractNode node1 = list1.remove(i);
