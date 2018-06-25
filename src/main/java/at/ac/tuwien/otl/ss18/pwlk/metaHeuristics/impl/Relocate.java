@@ -123,40 +123,54 @@ public class Relocate {
 
     Optional<NewRoutes> bestRoutes = Optional.empty();
 
-    for (int i=1; i<fromRoute.size()-1; i++) {
-      for (int j=1; j<toRoute.size(); j++) {
-        List<AbstractNode> from = new ArrayList<>(fromRoute);
-        List<AbstractNode> to = new ArrayList<>(toRoute);
-        AbstractNode node = from.remove(i);
-        to.add(j, node);
+    for (int a=0; a<2; a++) {
+      for (int i = 1; i < fromRoute.size() - 1; i++) {
+        for (int j = 1; j < toRoute.size(); j++) {
+          List<AbstractNode> from = new ArrayList<>(fromRoute);
+          List<AbstractNode> to = new ArrayList<>(toRoute);
+          AbstractNode node = from.remove(i);
 
-        if (route2.getDemandOfRoute() + node.getDemand() > problemInstance.getLoadCapacity()) {
-          continue;
-        }
 
-        Car car1 = new Car(problemInstance, distanceHolder);
-        Car car2 = new Car(problemInstance, distanceHolder);
-        try {
-          car2.driveRoute(to);
-          car1.driveRoute(from);
-
-          if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
-            double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
-            Route routeFrom = new Route();
-            routeFrom.setRoute(from);
-            routeFrom.setDistance(car1.getCurrentDistance());
-            Route routeTo = new Route();
-            routeTo.setRoute(to);
-            routeTo.setDistance(car2.getCurrentDistance());
-            NewRoutes newRoutes = new NewRoutes(saving, routeFrom, routeTo);
-
-            if (!bestRoutes.isPresent()) {
-              bestRoutes = Optional.of(newRoutes);
-            } else if(bestRoutes.get().saving > newRoutes.saving) {
-              bestRoutes = Optional.of(newRoutes);
+          if (a==1) {
+            if (node instanceof Customer) {
+              AbstractNode chargingStation = distanceHolder.getNearestRechargingStationsForCustomerInDistance(node, problemInstance.getDepot()).get(0).getKey();
+              to.add(j, chargingStation);
+            } else {
+              continue;
             }
           }
-        } catch (BatteryViolationException | TimewindowViolationException e) {}
+
+          to.add(j, node);
+
+          if (route2.getDemandOfRoute() + node.getDemand() > problemInstance.getLoadCapacity()) {
+            continue;
+          }
+
+          Car car1 = new Car(problemInstance, distanceHolder);
+          Car car2 = new Car(problemInstance, distanceHolder);
+          try {
+            car2.driveRoute(to);
+            car1.driveRoute(from);
+
+            if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
+              double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
+              Route routeFrom = new Route();
+              routeFrom.setRoute(from);
+              routeFrom.setDistance(car1.getCurrentDistance());
+              Route routeTo = new Route();
+              routeTo.setRoute(to);
+              routeTo.setDistance(car2.getCurrentDistance());
+              NewRoutes newRoutes = new NewRoutes(saving, routeFrom, routeTo);
+
+              if (!bestRoutes.isPresent()) {
+                bestRoutes = Optional.of(newRoutes);
+              } else if (bestRoutes.get().saving > newRoutes.saving) {
+                bestRoutes = Optional.of(newRoutes);
+              }
+            }
+          } catch (BatteryViolationException | TimewindowViolationException e) {
+          }
+        }
       }
     }
     return bestRoutes;

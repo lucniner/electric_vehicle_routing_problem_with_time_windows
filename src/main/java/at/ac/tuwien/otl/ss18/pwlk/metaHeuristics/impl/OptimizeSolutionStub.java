@@ -20,6 +20,8 @@ public class OptimizeSolutionStub extends AbstractOptimizeSolution {
           ProblemInstance problemInstance,
           DistanceHolder distanceHolder) {
 
+
+    solutionInstance = new SimulatedAnnealing().runAlgorithm(solutionInstance, problemInstance, distanceHolder).get();
     logger.info("Optimize solution with algorithm 'Stub'");
 
     SolutionInstance bestSolution = runOpts(solutionInstance, problemInstance, distanceHolder);
