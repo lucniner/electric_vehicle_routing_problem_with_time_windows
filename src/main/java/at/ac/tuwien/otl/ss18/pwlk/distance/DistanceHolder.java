@@ -136,8 +136,14 @@ public class DistanceHolder {
   }
 
   public List<Pair<AbstractNode, Double>> getNearestCustomersForCustomer(final AbstractNode from) {
-    final OptionalDouble minDistance = calculateMinDistanceInList(interCustomerDistances.get(from));
-    return calculateMinNodeBasedOnDistance(interCustomerDistances.get(from), minDistance);
+    List<Pair<AbstractNode, Double>> distances = interCustomerDistances.get(from);
+    if (distances == null) {
+      return Collections.emptyList();
+    } else {
+      final OptionalDouble minDistance = calculateMinDistanceInList(distances);
+      return calculateMinNodeBasedOnDistance(interCustomerDistances.get(from), minDistance);
+    }
+
   }
 
   public List<Pair<AbstractNode, Double>> getNearestRechargingStationsForCustomer(
