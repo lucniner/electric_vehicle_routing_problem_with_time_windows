@@ -48,6 +48,9 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
       }
       Optional<SolutionInstance> sol =
               new Relocate(solutionInstance1, problemInstance, distanceHolder).optimize();
+      if (sol.isPresent()) {
+        recalculateDistances(sol.get());
+      }
       if (sol.isPresent() && sol.get().getDistanceSum() < bestSolution.getDistanceSum()) {
         logger.info("relocate found new best solution");
         bestSolution = sol.get();
@@ -59,7 +62,6 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
         }
       }
 
-      recalculateDistances(bestSolution);
 
       solutionInstance1 = bestSolution.copy();
       for (Route route : solutionInstance1.getRoutes()) {
@@ -67,6 +69,9 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
       }
 
       sol = new Exchange(solutionInstance1, problemInstance, distanceHolder).optimize();
+      if (sol.isPresent()) {
+        recalculateDistances(sol.get());
+      }
       if (sol.isPresent() && sol.get().getDistanceSum() < bestSolution.getDistanceSum()) {
         logger.info("exchange found new best solution");
         bestSolution = sol.get();
@@ -77,13 +82,15 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
           bestSolution = sol.get();
         }
       }
-      recalculateDistances(bestSolution);
 
       solutionInstance1 = bestSolution.copy();
       for (Route route : solutionInstance1.getRoutes()) {
         route.setDistance(route.getDistance()+20);
       }
       sol = new CrossExchange(solutionInstance1, problemInstance, distanceHolder).optimize();
+      if (sol.isPresent()) {
+        recalculateDistances(sol.get());
+      }
       if (sol.isPresent() && sol.get().getDistanceSum() < bestSolution.getDistanceSum()) {
         logger.info("cross exchange found new best solution");
         bestSolution = sol.get();
@@ -94,21 +101,20 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
           bestSolution = sol.get();
         }
       }
-      recalculateDistances(bestSolution);
 
       SolutionInstance instance = runOpts(bestSolution, problemInstance, distanceHolder);
       if (instance.getDistanceSum() < bestSolution.getDistanceSum()) {
         logger.info("opts found new best solution");
         bestSolution = instance;
       }
+      temperature *= cooling_factor;
+      if (temperature <= 1) {
+        temperature = 1;
+      }
+
     }
     finalizeRoutes(bestSolution.getRoutes());
 
-
-    temperature *= cooling_factor;
-    if (temperature <= 1) {
-      temperature = 1;
-    }
 
     return Optional.of(bestSolution);
   }
