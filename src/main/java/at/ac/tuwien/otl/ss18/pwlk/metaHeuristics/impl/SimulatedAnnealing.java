@@ -35,7 +35,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
     SolutionInstance bestSolution = solutionInstance;
 
     double temperature = MAX_ITERATION * 3;
-    double cooling_factor = 0.92;
+    double cooling_factor = 0.97;
 
 
     for (int i=0; i<MAX_ITERATION; i++) {
