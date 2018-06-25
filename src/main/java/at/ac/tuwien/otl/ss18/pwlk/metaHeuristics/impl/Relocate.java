@@ -96,7 +96,7 @@ public class Relocate {
           if (!hopeLessRelocate.containsKey(new Pair<Route, Route>(route1, route2))) {
             boolean hopeless = true;
             if (alreadyComputed.containsKey(new Pair<Route, Route>(route1, route2))) {
-              NewRoutes newRoutes = alreadyComputed.get(new Pair<Route, Route>(route1, route2));
+              NewRoutes newRoutes = alreadyComputed.remove(new Pair<Route, Route>(route1, route2));
               savings.put(new Pair<Route, Route>(route1, route2), newRoutes);
               hopeless = false;
             } else {
