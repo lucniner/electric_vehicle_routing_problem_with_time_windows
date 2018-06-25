@@ -96,7 +96,7 @@ public class CrossExchange {
           if (!hopeLessExchange.containsKey(new Pair(route1, route2))) {
             boolean hopeless = true;
             if (alreadyComputed.containsKey(new Pair(route1, route2))) {
-              NewRoutes newRoutes = alreadyComputed.remove(new Pair(route1, route2));
+              NewRoutes newRoutes = alreadyComputed.get(new Pair(route1, route2));
               savings.put(new Pair(route1, route2), newRoutes);
               hopeless = false;
             } else {
