@@ -6,10 +6,14 @@ import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.DefaultGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class InstanceVisualizer {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final List<String> colors = new ArrayList<>();
     private final ProblemInstance problem;
@@ -50,7 +54,6 @@ public class InstanceVisualizer {
         }
 
         final List<ChargingStations> chargings = problem.getChargingStations();
-        chargings.remove(0);
         for (final ChargingStations f : chargings) {
             final Node fuel = graph.addNode(f.getId());
             fuel.addAttribute("ui.style", "fill-color: red;size: 15px;");
@@ -69,8 +72,11 @@ public class InstanceVisualizer {
                 Node currentNode = nodeMap.get(current);
                 Node nextNode = nodeMap.get(next);
                 try {
-                    Edge edge = graph.addEdge(UUID.randomUUID().toString(), currentNode, nextNode, true);
-                    edge.addAttribute("ui.style", "fill-color: " + color + ";size: 4px;");
+                    if (currentNode != null && nextNode != null) {
+                        Edge edge = graph.addEdge(UUID.randomUUID().toString(), currentNode, nextNode, true);
+                        edge.addAttribute("ui.style", "fill-color: " + color + ";size: 4px;");
+                    }
+
                 } catch (EdgeRejectedException e) {
                     //ignore
                 }

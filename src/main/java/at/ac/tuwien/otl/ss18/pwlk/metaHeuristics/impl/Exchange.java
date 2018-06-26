@@ -21,20 +21,8 @@ public class Exchange {
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
 
-  private Map hopeLessExchange;
-  private Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
-
-  private class NewRoutes {
-    private double saving;
-    private Route route1;
-    private Route route2;
-
-    NewRoutes(double saving, Route route1, Route route2) {
-      this.saving = saving;
-      this.route1 = route1;
-      this.route2 = route2;
-    }
-  }
+  Map<Pair<Route, Route>, Boolean> hopeLessExchange;
+  Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
 
   public Exchange(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
     this.solutionInstance = solutionInstance;
@@ -43,12 +31,12 @@ public class Exchange {
   }
 
 
-  public Optional<SolutionInstance> optimize() {
+  public Optional<SolutionInstance> optimize(Map hopeLessExchange, Map alreadyComputed) {
     SolutionInstance bestSolutionInstance = solutionInstance;
     SolutionInstance currSolutionInstance = solutionInstance.copy();
 
-    hopeLessExchange = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
-    alreadyComputed = new ConcurrentHashMap<>();
+    this.hopeLessExchange = hopeLessExchange;
+    this.alreadyComputed = alreadyComputed;
 
     Map<Pair<Route, Route>, NewRoutes> savings = calculateSavingsValue(currSolutionInstance);
     while (!savings.isEmpty()) {
@@ -58,8 +46,8 @@ public class Exchange {
         if (bestSaving == null) {
           bestSaving = saving;
         } else {
-          double value_saving = saving.getValue().saving;
-          double value_best = bestSaving.getValue().saving;
+          double value_saving = saving.getValue().getSaving();
+          double value_best = bestSaving.getValue().getSaving();
 
           if (value_best < value_saving) {
             bestSaving = saving;
@@ -70,8 +58,8 @@ public class Exchange {
       logger.debug("Exchange nodes");
 
       List<Route> routeList = currSolutionInstance.getRoutes();
-      routeList.add(bestSaving.getValue().route1);
-      routeList.add(bestSaving.getValue().route2);
+      routeList.add(bestSaving.getValue().getRoute1());
+      routeList.add(bestSaving.getValue().getRoute2());
       routeList.remove(bestSaving.getKey().getKey());
       routeList.remove(bestSaving.getKey().getValue());
 
@@ -158,7 +146,7 @@ public class Exchange {
 
             if (!bestRoutes.isPresent()) {
               bestRoutes = Optional.of(newRoutes);
-            } else if(bestRoutes.get().saving > newRoutes.saving) {
+            } else if(bestRoutes.get().getSaving() > newRoutes.getSaving()) {
               bestRoutes = Optional.of(newRoutes);
             }
           }

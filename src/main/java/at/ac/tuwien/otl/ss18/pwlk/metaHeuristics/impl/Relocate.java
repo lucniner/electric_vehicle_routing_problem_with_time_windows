@@ -15,164 +15,154 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Relocate {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    Map<Pair<Route, Route>, Boolean> hopeLessExchange;
+    Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
+    private SolutionInstance solutionInstance;
+    private ProblemInstance problemInstance;
+    private DistanceHolder distanceHolder;
 
-  private SolutionInstance solutionInstance;
-  private ProblemInstance problemInstance;
-  private DistanceHolder distanceHolder;
-
-  private Map hopeLessRelocate;
-  private Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
-
-  private class NewRoutes {
-    private double saving;
-    private Route route1;
-    private Route route2;
-
-    NewRoutes(double saving, Route route1, Route route2) {
-      this.saving = saving;
-      this.route1 = route1;
-      this.route2 = route2;
+    public Relocate(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
+        this.solutionInstance = solutionInstance;
+        this.problemInstance = problemInstance;
+        this.distanceHolder = distanceHolder;
     }
-  }
-
-  public Relocate(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
-    this.solutionInstance = solutionInstance;
-    this.problemInstance = problemInstance;
-    this.distanceHolder = distanceHolder;
-  }
 
 
-  public Optional<SolutionInstance> optimize() {
-    SolutionInstance bestSolutionInstance = solutionInstance;
-    SolutionInstance currSolutionInstance = solutionInstance.copy();
+    public Optional<SolutionInstance> optimize(Map<Pair<Route, Route>, Boolean> hopeLessExchange, Map<Pair<Route, Route>, NewRoutes> alreadyComputed) {
+        SolutionInstance bestSolutionInstance = solutionInstance;
+        SolutionInstance currSolutionInstance = solutionInstance.copy();
 
-    hopeLessRelocate = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
-    alreadyComputed = new ConcurrentHashMap<>();
+        this.hopeLessExchange = hopeLessExchange;
+        this.alreadyComputed = alreadyComputed;
 
-    Map<Pair<Route, Route>, NewRoutes> savings = calculateSavingsValue(currSolutionInstance);
-    while (!savings.isEmpty()) {
-      Map.Entry<Pair<Route, Route>, NewRoutes> bestSaving = null;
+        Map<Pair<Route, Route>, NewRoutes> savings = calculateSavingsValue(currSolutionInstance);
+        while (!savings.isEmpty()) {
+            Map.Entry<Pair<Route, Route>, NewRoutes> bestSaving = null;
 
-      for (Map.Entry<Pair<Route, Route>, NewRoutes> saving : savings.entrySet()) {
-        if (bestSaving == null) {
-          bestSaving = saving;
+            for (Map.Entry<Pair<Route, Route>, NewRoutes> saving : savings.entrySet()) {
+                if (bestSaving == null) {
+                    bestSaving = saving;
+                } else {
+                    double value_saving = saving.getValue().getSaving();
+                    double value_best = bestSaving.getValue().getSaving();
+
+                    if (value_best < value_saving) {
+                        bestSaving = saving;
+                    }
+                }
+            }
+
+            logger.debug("Relocate customer");
+
+            List<Route> routeList = currSolutionInstance.getRoutes();
+            routeList.add(bestSaving.getValue().getRoute1());
+            routeList.add(bestSaving.getValue().getRoute2());
+            routeList.remove(bestSaving.getKey().getKey());
+            routeList.remove(bestSaving.getKey().getValue());
+
+            savings = calculateSavingsValue(currSolutionInstance);
+        }
+
+        if (currSolutionInstance.getDistanceSum() < bestSolutionInstance.getDistanceSum()) {
+            bestSolutionInstance = currSolutionInstance;
+            return Optional.of(bestSolutionInstance);
         } else {
-          double value_saving = saving.getValue().saving;
-          double value_best = bestSaving.getValue().saving;
-
-          if (value_best < value_saving) {
-            bestSaving = saving;
-          }
+            return Optional.empty();
         }
-      }
-
-      logger.debug("Relocate customer");
-
-      List<Route> routeList = currSolutionInstance.getRoutes();
-      routeList.add(bestSaving.getValue().route1);
-      routeList.add(bestSaving.getValue().route2);
-      routeList.remove(bestSaving.getKey().getKey());
-      routeList.remove(bestSaving.getKey().getValue());
-
-      savings = calculateSavingsValue(currSolutionInstance);
     }
 
-    if (currSolutionInstance.getDistanceSum() < bestSolutionInstance.getDistanceSum()) {
-      bestSolutionInstance = currSolutionInstance;
-      return Optional.of(bestSolutionInstance);
-    } else {
-      return Optional.empty();
+
+    private Map<Pair<Route, Route>, NewRoutes> calculateSavingsValue(SolutionInstance currSolution) {
+        Map<Pair<Route, Route>, NewRoutes> savings = new ConcurrentHashMap<>();
+
+        currSolution.getRoutes().parallelStream().forEach((route1) -> {
+            for (final Route route2 : currSolution.getRoutes()) {
+                if ((!route1.equals(route2))) {
+                    if (!hopeLessExchange.containsKey(new Pair<Route, Route>(route1, route2))) {
+                        boolean hopeless = true;
+                        if (alreadyComputed.containsKey(new Pair<Route, Route>(route1, route2))) {
+                            NewRoutes newRoutes = alreadyComputed.get(new Pair<Route, Route>(route1, route2));
+                            savings.put(new Pair<Route, Route>(route1, route2), newRoutes);
+                            hopeless = false;
+                        } else {
+                            Optional<NewRoutes> newRoute = relocateNode(route1, route2);
+                            if (newRoute.isPresent()) {
+                                alreadyComputed.put(new Pair<Route, Route>(route1, route2), newRoute.get());
+                                savings.put(new Pair<Route, Route>(route1, route2), newRoute.get());
+                                hopeless = false;
+                            }
+                        }
+                        if (hopeless) {
+                            hopeLessExchange.put(new Pair<Route, Route>(route1.copyRoute(), route2.copyRoute()), true);
+                        }
+                    }
+                }
+            }
+        });
+        return savings;
     }
-  }
+
+    private Optional<NewRoutes> relocateNode(Route route1, Route route2) {
+        List<AbstractNode> fromRoute = route1.getRoute();
+        List<AbstractNode> toRoute = route2.getRoute();
+
+        Optional<NewRoutes> bestRoutes = Optional.empty();
+
+        for (int a = 0; a < 2; a++) {
+            for (int i = 1; i < fromRoute.size() - 1; i++) {
+                for (int j = 1; j < toRoute.size(); j++) {
+                    List<AbstractNode> from = new ArrayList<>(fromRoute);
+                    List<AbstractNode> to = new ArrayList<>(toRoute);
+                    AbstractNode node = from.remove(i);
 
 
-  private Map<Pair<Route, Route>, NewRoutes> calculateSavingsValue(SolutionInstance currSolution) {
-    Map<Pair<Route, Route>, NewRoutes> savings = new ConcurrentHashMap<>();
+                    if (a == 1) {
+                        if (node instanceof Customer) {
+                            final List<Pair<AbstractNode, Double>> chargings = distanceHolder.getNearestRechargingStationsForCustomerInDistance(node, problemInstance.getDepot());
+                            if (!chargings.isEmpty()) {
+                                AbstractNode chargingStation = chargings.get(0).getKey();
+                                to.add(j, chargingStation);
+                            }
 
-    currSolution.getRoutes().parallelStream().forEach((route1) -> {
-      for (final Route route2 : currSolution.getRoutes()) {
-        if ((!route1.equals(route2))) {
-          if (!hopeLessRelocate.containsKey(new Pair<Route, Route>(route1, route2))) {
-            boolean hopeless = true;
-            if (alreadyComputed.containsKey(new Pair<Route, Route>(route1, route2))) {
-              NewRoutes newRoutes = alreadyComputed.get(new Pair<Route, Route>(route1, route2));
-              savings.put(new Pair<Route, Route>(route1, route2), newRoutes);
-              hopeless = false;
-            } else {
-              Optional<NewRoutes> newRoute = relocateNode(route1, route2);
-              if (newRoute.isPresent()) {
-                alreadyComputed.put(new Pair<Route, Route>(route1, route2), newRoute.get());
-                savings.put(new Pair<Route, Route>(route1, route2), newRoute.get());
-                hopeless = false;
-              }
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    to.add(j, node);
+
+                    if (route2.getDemandOfRoute() + node.getDemand() > problemInstance.getLoadCapacity()) {
+                        continue;
+                    }
+
+                    Car car1 = new Car(problemInstance, distanceHolder);
+                    Car car2 = new Car(problemInstance, distanceHolder);
+                    try {
+                        car2.driveRoute(to);
+                        car1.driveRoute(from);
+
+                        if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
+                            double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
+                            Route routeFrom = new Route();
+                            routeFrom.setRoute(from);
+                            routeFrom.setDistance(car1.getCurrentDistance());
+                            Route routeTo = new Route();
+                            routeTo.setRoute(to);
+                            routeTo.setDistance(car2.getCurrentDistance());
+                            NewRoutes newRoutes = new NewRoutes(saving, routeFrom, routeTo);
+
+                            if (!bestRoutes.isPresent()) {
+                                bestRoutes = Optional.of(newRoutes);
+                            } else if (bestRoutes.get().getSaving() > newRoutes.getSaving()) {
+                                bestRoutes = Optional.of(newRoutes);
+                            }
+                        }
+                    } catch (BatteryViolationException | TimewindowViolationException e) {
+                    }
+                }
             }
-            if (hopeless) {
-              hopeLessRelocate.put(new Pair<Route, Route>(route1.copyRoute(), route2.copyRoute()), true);
-            }
-          }
         }
-      }
-    });
-    return savings;
-  }
-
-  private Optional<NewRoutes> relocateNode(Route route1, Route route2) {
-    List<AbstractNode> fromRoute = route1.getRoute();
-    List<AbstractNode> toRoute = route2.getRoute();
-
-    Optional<NewRoutes> bestRoutes = Optional.empty();
-
-    for (int a=0; a<2; a++) {
-      for (int i = 1; i < fromRoute.size() - 1; i++) {
-        for (int j = 1; j < toRoute.size(); j++) {
-          List<AbstractNode> from = new ArrayList<>(fromRoute);
-          List<AbstractNode> to = new ArrayList<>(toRoute);
-          AbstractNode node = from.remove(i);
-
-
-          if (a==1) {
-            if (node instanceof Customer) {
-              AbstractNode chargingStation = distanceHolder.getNearestRechargingStationsForCustomerInDistance(node, problemInstance.getDepot()).get(0).getKey();
-              to.add(j, chargingStation);
-            } else {
-              continue;
-            }
-          }
-
-          to.add(j, node);
-
-          if (route2.getDemandOfRoute() + node.getDemand() > problemInstance.getLoadCapacity()) {
-            continue;
-          }
-
-          Car car1 = new Car(problemInstance, distanceHolder);
-          Car car2 = new Car(problemInstance, distanceHolder);
-          try {
-            car2.driveRoute(to);
-            car1.driveRoute(from);
-
-            if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
-              double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
-              Route routeFrom = new Route();
-              routeFrom.setRoute(from);
-              routeFrom.setDistance(car1.getCurrentDistance());
-              Route routeTo = new Route();
-              routeTo.setRoute(to);
-              routeTo.setDistance(car2.getCurrentDistance());
-              NewRoutes newRoutes = new NewRoutes(saving, routeFrom, routeTo);
-
-              if (!bestRoutes.isPresent()) {
-                bestRoutes = Optional.of(newRoutes);
-              } else if (bestRoutes.get().saving > newRoutes.saving) {
-                bestRoutes = Optional.of(newRoutes);
-              }
-            }
-          } catch (BatteryViolationException | TimewindowViolationException e) {
-          }
-        }
-      }
+        return bestRoutes;
     }
-    return bestRoutes;
-  }
 }
