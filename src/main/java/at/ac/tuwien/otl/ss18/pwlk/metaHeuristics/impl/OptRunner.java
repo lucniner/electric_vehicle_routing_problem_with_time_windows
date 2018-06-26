@@ -8,6 +8,7 @@ import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class OptRunner {
 
@@ -16,10 +17,11 @@ public class OptRunner {
             ProblemInstance problemInstance,
             DistanceHolder distanceHolder) {
         SolutionInstance optimizedSolution = new SolutionInstance();
-        final List<Route> optimizedRoutes = new ArrayList<>();
+        final List<Route> optimizedRoutes = new CopyOnWriteArrayList<>();
 
         solutionInstance
                 .getRoutes()
+                .parallelStream()
                 .forEach(
                         r -> {
                             BestOrOptExchange exchange =
@@ -36,10 +38,11 @@ public class OptRunner {
 
         SolutionInstance bestSolution = new SolutionInstance();
 
-        final List<Route> bestRoutes = new ArrayList<>();
+        final List<Route> bestRoutes = new CopyOnWriteArrayList<>();
 
         optimizedSolution
                 .getRoutes()
+                .parallelStream()
                 .forEach(
                         r -> {
                             BestTwoOptExchagne exchange =

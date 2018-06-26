@@ -45,7 +45,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
 
 
         for (int i = 0; i < MAX_ITERATION; i++) {
-            logger.info("Current iteration: " + i);
+            logger.debug("Current iteration: " + i);
 
             bestSolution.setRoutes(RouteFilter.filterNodesInRoutes(bestSolution.getRoutes()));
             bestSolution = new ChargingChecker(problemInstance, distanceHolder, bestSolution).optimize();
@@ -59,12 +59,12 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
                 recalculateDistances(sol.get());
             }
             if (sol.isPresent() && sol.get().getDistanceSum() < bestSolution.getDistanceSum()) {
-                logger.info("relocate found new best solution");
+                logger.debug("relocate found new best solution");
                 bestSolution = sol.get();
             } else if (sol.isPresent() && temperature > 1) {
                 double probability = 1 / (1 + Math.exp((bestSolution.getDistanceSum() - sol.get().getDistanceSum()) / temperature));
                 if (Math.random() > probability) {
-                    logger.info("relocate found new solution");
+                    logger.debug("relocate found new solution");
                     bestSolution = sol.get();
                 }
             }
@@ -80,12 +80,12 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
                 recalculateDistances(sol.get());
             }
             if (sol.isPresent() && sol.get().getDistanceSum() < bestSolution.getDistanceSum()) {
-                logger.info("exchange found new best solution");
+                logger.debug("exchange found new best solution");
                 bestSolution = sol.get();
             } else if (sol.isPresent() && temperature > 1) {
                 double probability = 1 / (1 + Math.exp((bestSolution.getDistanceSum() - sol.get().getDistanceSum()) / temperature));
                 if (Math.random() > probability) {
-                    logger.info("exchange found new solution");
+                    logger.debug("exchange found new solution");
                     bestSolution = sol.get();
                 }
             }
@@ -99,19 +99,19 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
                 recalculateDistances(sol.get());
             }
             if (sol.isPresent() && sol.get().getDistanceSum() < bestSolution.getDistanceSum()) {
-                logger.info("cross exchange found new best solution");
+                logger.debug("cross exchange found new best solution");
                 bestSolution = sol.get();
             } else if (sol.isPresent() && temperature > 1) {
                 double probability = 1 / (1 + Math.exp((bestSolution.getDistanceSum() - sol.get().getDistanceSum()) / temperature));
                 if (Math.random() > probability) {
-                    logger.info("cross exchange found new solution");
+                    logger.debug("cross exchange found new solution");
                     bestSolution = sol.get();
                 }
             }
 
             SolutionInstance instance = OptRunner.runOpts(bestSolution, problemInstance, distanceHolder);
             if (instance.getDistanceSum() < bestSolution.getDistanceSum()) {
-                logger.info("opts found new best solution");
+                logger.debug("opts found new best solution");
                 bestSolution = instance;
             }
             temperature *= cooling_factor;

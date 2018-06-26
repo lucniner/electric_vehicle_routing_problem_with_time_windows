@@ -44,25 +44,25 @@ public class OperatorRunner {
             Optional<SolutionInstance> sol =
                     new Relocate(bestSolution, problemInstance, distanceHolder).optimize(hopeLess_relocate, alreadyComputed_relocate);
             if (sol.isPresent() && sol.get().getDistanceSum() < bestDistance) {
-                logger.info("relocate found new best solution");
+                logger.debug("relocate found new best solution");
                 bestSolution = sol.get();
             }
 
             sol = new Exchange(bestSolution, problemInstance, distanceHolder).optimize(hopeLess_exchange, alreadyComputed_exchange);
             if (sol.isPresent() && sol.get().getDistanceSum() < bestDistance) {
-                logger.info("exchange found new best solution");
+                logger.debug("exchange found new best solution");
                 bestSolution = sol.get();
             }
 
             sol = new CrossExchange(bestSolution, problemInstance, distanceHolder).optimize(hopeLess_cross, alreadyComputed_cross);
             if (sol.isPresent() && sol.get().getDistanceSum() < bestDistance) {
-                logger.info("cross exchange found new best solution");
+                logger.debug("cross exchange found new best solution");
                 bestSolution = sol.get();
             }
 
             SolutionInstance instance = OptRunner.runOpts(bestSolution, problemInstance, distanceHolder);
             if (instance.getDistanceSum() < bestDistance) {
-                logger.info("opts found new best solution");
+                logger.debug("opts found new best solution");
                 bestSolution = instance;
             }
             currentDistance = bestSolution.getDistanceSum();
