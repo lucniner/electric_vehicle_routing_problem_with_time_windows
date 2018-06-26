@@ -3,6 +3,7 @@ package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
+import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Car;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Route;
@@ -12,7 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SimulatedAnnealing extends AbstractOptimizeSolution {
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -38,6 +41,15 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
     double cooling_factor = 0.97;
 
 
+
+    Map<Pair<Route, Route>, Boolean> hopeLess_exchange = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
+    Map<Pair<Route, Route>, NewRoutes> alreadyComputed_exchange = new ConcurrentHashMap<>();
+    Map<Pair<Route, Route>, Boolean> hopeLess_relocate = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
+    Map<Pair<Route, Route>, NewRoutes> alreadyComputed_relocate = new ConcurrentHashMap<>();
+    Map<Pair<Route, Route>, Boolean> hopeLess_cross = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
+    Map<Pair<Route, Route>, NewRoutes> alreadyComputed_cross = new ConcurrentHashMap<>();
+
+
     for (int i=0; i<MAX_ITERATION; i++) {
       logger.info("Current iteration: " + i);
 
@@ -47,7 +59,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
         route.setDistance(route.getDistance()+20);
       }
       Optional<SolutionInstance> sol =
-              new Relocate(solutionInstance1, problemInstance, distanceHolder).optimize();
+              new Relocate(solutionInstance1, problemInstance, distanceHolder).optimize(hopeLess_relocate, alreadyComputed_relocate);
       if (sol.isPresent()) {
         recalculateDistances(sol.get());
       }
@@ -68,7 +80,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
         route.setDistance(route.getDistance()+20);
       }
 
-      sol = new Exchange(solutionInstance1, problemInstance, distanceHolder).optimize();
+      sol = new Exchange(solutionInstance1, problemInstance, distanceHolder).optimize(hopeLess_exchange, alreadyComputed_exchange);
       if (sol.isPresent()) {
         recalculateDistances(sol.get());
       }
@@ -87,7 +99,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
       for (Route route : solutionInstance1.getRoutes()) {
         route.setDistance(route.getDistance()+20);
       }
-      sol = new CrossExchange(solutionInstance1, problemInstance, distanceHolder).optimize();
+      sol = new CrossExchange(solutionInstance1, problemInstance, distanceHolder).optimize(hopeLess_cross, alreadyComputed_cross);
       if (sol.isPresent()) {
         recalculateDistances(sol.get());
       }

@@ -21,20 +21,8 @@ public class Relocate {
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
 
-  private Map hopeLessRelocate;
-  private Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
-
-  private class NewRoutes {
-    private double saving;
-    private Route route1;
-    private Route route2;
-
-    NewRoutes(double saving, Route route1, Route route2) {
-      this.saving = saving;
-      this.route1 = route1;
-      this.route2 = route2;
-    }
-  }
+  Map<Pair<Route, Route>, Boolean> hopeLessExchange;
+  Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
 
   public Relocate(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
     this.solutionInstance = solutionInstance;
@@ -43,12 +31,12 @@ public class Relocate {
   }
 
 
-  public Optional<SolutionInstance> optimize() {
+  public Optional<SolutionInstance> optimize(Map<Pair<Route, Route>, Boolean> hopeLessExchange, Map<Pair<Route, Route>, NewRoutes> alreadyComputed) {
     SolutionInstance bestSolutionInstance = solutionInstance;
     SolutionInstance currSolutionInstance = solutionInstance.copy();
 
-    hopeLessRelocate = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
-    alreadyComputed = new ConcurrentHashMap<>();
+    this.hopeLessExchange = hopeLessExchange;
+    this.alreadyComputed = alreadyComputed;
 
     Map<Pair<Route, Route>, NewRoutes> savings = calculateSavingsValue(currSolutionInstance);
     while (!savings.isEmpty()) {
@@ -58,8 +46,8 @@ public class Relocate {
         if (bestSaving == null) {
           bestSaving = saving;
         } else {
-          double value_saving = saving.getValue().saving;
-          double value_best = bestSaving.getValue().saving;
+          double value_saving = saving.getValue().getSaving();
+          double value_best = bestSaving.getValue().getSaving();
 
           if (value_best < value_saving) {
             bestSaving = saving;
@@ -70,8 +58,8 @@ public class Relocate {
       logger.debug("Relocate customer");
 
       List<Route> routeList = currSolutionInstance.getRoutes();
-      routeList.add(bestSaving.getValue().route1);
-      routeList.add(bestSaving.getValue().route2);
+      routeList.add(bestSaving.getValue().getRoute1());
+      routeList.add(bestSaving.getValue().getRoute2());
       routeList.remove(bestSaving.getKey().getKey());
       routeList.remove(bestSaving.getKey().getValue());
 
@@ -93,7 +81,7 @@ public class Relocate {
     currSolution.getRoutes().parallelStream().forEach((route1) -> {
       for (final Route route2 : currSolution.getRoutes()) {
         if ((!route1.equals(route2))) {
-          if (!hopeLessRelocate.containsKey(new Pair<Route, Route>(route1, route2))) {
+          if (!hopeLessExchange.containsKey(new Pair<Route, Route>(route1, route2))) {
             boolean hopeless = true;
             if (alreadyComputed.containsKey(new Pair<Route, Route>(route1, route2))) {
               NewRoutes newRoutes = alreadyComputed.get(new Pair<Route, Route>(route1, route2));
@@ -108,7 +96,7 @@ public class Relocate {
               }
             }
             if (hopeless) {
-              hopeLessRelocate.put(new Pair<Route, Route>(route1.copyRoute(), route2.copyRoute()), true);
+              hopeLessExchange.put(new Pair<Route, Route>(route1.copyRoute(), route2.copyRoute()), true);
             }
           }
         }
@@ -164,7 +152,7 @@ public class Relocate {
 
               if (!bestRoutes.isPresent()) {
                 bestRoutes = Optional.of(newRoutes);
-              } else if (bestRoutes.get().saving > newRoutes.saving) {
+              } else if (bestRoutes.get().getSaving() > newRoutes.getSaving()) {
                 bestRoutes = Optional.of(newRoutes);
               }
             }
