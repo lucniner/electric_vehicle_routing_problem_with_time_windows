@@ -17,11 +17,10 @@ public class OptRunner {
           ProblemInstance problemInstance,
           DistanceHolder distanceHolder) {
     SolutionInstance optimizedSolution = new SolutionInstance();
-    final List<Route> optimizedRoutes = new CopyOnWriteArrayList<>();
+    final List<Route> optimizedRoutes = new ArrayList<>();
 
     solutionInstance
             .getRoutes()
-            .parallelStream()
             .forEach(
                     r -> {
                       BestOrOptExchange exchange =
@@ -38,11 +37,10 @@ public class OptRunner {
 
     SolutionInstance bestSolution = new SolutionInstance();
 
-    final List<Route> bestRoutes = new CopyOnWriteArrayList<>();
+    final List<Route> bestRoutes = new ArrayList<>();
 
     optimizedSolution
             .getRoutes()
-            .parallelStream()
             .forEach(
                     r -> {
                       BestTwoOptExchagne exchange =
