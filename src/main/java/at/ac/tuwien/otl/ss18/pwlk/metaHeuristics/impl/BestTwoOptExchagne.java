@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.AbstractNode;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Car;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
@@ -55,20 +53,15 @@ public class BestTwoOptExchagne {
     }
 
 
-    private void driveCar(final List<AbstractNode> nodes, final Route opt) {
-        Car car = new Car(problemInstance, distanceHolder);
-        try {
-            car.driveRoute(nodes);
-            opt.setDistance(car.getCurrentDistance());
-          opt.setRoute(nodes);
-            if (opt.getDistance() < route.getDistance()) {
-                routes.add(opt);
-            }
-        } catch (BatteryViolationException e) {
-
-        } catch (TimewindowViolationException e) {
-
-        }
+  private void driveCar(final List<AbstractNode> nodes, final Route opt) {
+    Car car = new Car(problemInstance, distanceHolder);
+    if (car.driveRoute(nodes)) {
+      opt.setDistance(car.getCurrentDistance());
+      opt.setRoute(nodes);
+      if (opt.getDistance() < route.getDistance()) {
+        routes.add(opt);
+      }
     }
+  }
 
 }

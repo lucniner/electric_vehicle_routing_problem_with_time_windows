@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
@@ -46,17 +44,13 @@ public class InterRouteChanger {
       }
 
       Car car = new Car(problemInstance, holder);
-      try {
-        final Route optimizedRoute = new Route();
-        car.driveRoute(optimizedNodeRoute);
-        optimizedRoute.setDistance(car.getCurrentDistance());
-        optimizedRoute.setRoute(optimizedNodeRoute);
-        optimizedRoutes.add(optimizedRoute);
-      } catch (TimewindowViolationException e) {
-        e.printStackTrace();
-      } catch (BatteryViolationException e) {
-        e.printStackTrace();
+      final Route optimizedRoute = new Route();
+      if (!car.driveRoute(optimizedNodeRoute)) {
+        continue;
       }
+      optimizedRoute.setDistance(car.getCurrentDistance());
+      optimizedRoute.setRoute(optimizedNodeRoute);
+      optimizedRoutes.add(optimizedRoute);
     }
 
     return optimizedRoutes;
@@ -66,14 +60,7 @@ public class InterRouteChanger {
           final List<AbstractNode> route, final AbstractNode node) {
     route.add(node);
     Car car = new Car(problemInstance, holder);
-    try {
-      car.driveRoute(route);
-      return true;
-    } catch (TimewindowViolationException e) {
-      return false;
-    } catch (BatteryViolationException e) {
-      return false;
-    }
+    return car.driveRoute(route);
   }
 
   private void removeCustomerFromRoute(final AbstractNode node) {

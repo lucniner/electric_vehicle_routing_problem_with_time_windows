@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.util.RouteFilter;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.Car;
@@ -134,11 +132,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
     private void recalculateDistances(SolutionInstance solutionInstance) {
         for (Route route : solutionInstance.getRoutes()) {
             Car car = new Car(problemInstance, distanceHolder);
-            try {
-                car.driveRoute(route.getRoute());
-            } catch (BatteryViolationException | TimewindowViolationException e) {
-                logger.error("should not happen");
-            }
+            car.driveRoute(route.getRoute());
             route.setDistance(car.getCurrentDistance());
         }
     }

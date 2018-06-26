@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.constructionHeuristic.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 import org.slf4j.Logger;
@@ -153,11 +151,7 @@ public class MergeRoute {
     }
 
     // drive firstroute
-    try {
-      car.driveRoute(firstRoute.getRoute());
-    } catch (TimewindowViolationException t) {
-      return Optional.empty();
-    } catch (BatteryViolationException b) {
+    if (!car.driveRoute(firstRoute.getRoute())) {
       return Optional.empty();
     }
 
@@ -315,11 +309,8 @@ public class MergeRoute {
       // now connect route 1 and remaining route
       remainingRoute.getRoute().add(0, firstRoute.getRoute().get(firstRoute.getRoute().size() - 1));
 
-      try {
-        newCar.driveRoute(remainingRoute.getRoute());
+      if (newCar.driveRoute(remainingRoute.getRoute())) {
         possibleSolutions.add(new Pair(newCar, remainingRoute.getRoute()));
-      } catch (BatteryViolationException b) {
-      } catch (TimewindowViolationException t) {
       }
     }
 

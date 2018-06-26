@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
 import java.util.ArrayList;
@@ -33,33 +31,22 @@ public class ChargingChecker {
         final List<AbstractNode> nodes = new ArrayList<>(route.getRoute());
         if (routeHasChargingSation(nodes)) {
             removeChargingStationBetweenDepotAndFirstCustomer(nodes);
-            try {
-                driveCar(nodes);
-            } catch (BatteryViolationException e) {
+            if (!driveCar(nodes)) {
                 insertChargingStationBetweenDepotAndFirstCustomer(nodes);
-            } catch (TimewindowViolationException e) {
-
             }
 
             removeChargingStationBetweenLastCustomerAndDepot(nodes);
-            try {
-                driveCar(nodes);
-            } catch (BatteryViolationException e) {
+            if (!driveCar(nodes)) {
                 insertChargingStationBetweenLastCustomerAndDepot(nodes);
-            } catch (TimewindowViolationException e) {
-
             }
         }
 
         Car car = new Car(problemInstance, distanceHolder);
-        try {
-            car.driveRoute(nodes);
+        if (car.driveRoute(nodes)) {
             if (car.getCurrentDistance() < route.getDistance()) {
                 route.setRoute(nodes);
                 route.setDistance(car.getCurrentDistance());
             }
-        } catch (BatteryViolationException | TimewindowViolationException e) {
-
         }
     }
 
@@ -93,11 +80,9 @@ public class ChargingChecker {
     }
 
 
-    private double driveCar(final List<AbstractNode> route) throws BatteryViolationException, TimewindowViolationException {
+    private boolean driveCar(final List<AbstractNode> route) {
         final Car car = new Car(problemInstance, distanceHolder);
-        car.driveRoute(route);
-        return car.getCurrentDistance();
-
+        return car.driveRoute(route);
     }
 
     private void insertChargingStationBetweenDepotAndFirstCustomer(final List<AbstractNode> route) {

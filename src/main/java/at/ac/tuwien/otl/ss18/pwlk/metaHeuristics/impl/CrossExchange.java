@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 import org.slf4j.Logger;
@@ -142,27 +140,30 @@ public class CrossExchange {
 
         Car car1 = new Car(problemInstance, distanceHolder);
         Car car2 = new Car(problemInstance, distanceHolder);
-        try {
-          car2.driveRoute(list2);
-          car1.driveRoute(list1);
 
-          if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
-            double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
-            Route routeList1 = new Route();
-            routeList1.setRoute(list1);
-            routeList1.setDistance(car1.getCurrentDistance());
-            Route routeList2 = new Route();
-            routeList2.setRoute(list2);
-            routeList2.setDistance(car2.getCurrentDistance());
-            NewRoutes newRoutes = new NewRoutes(saving, routeList1, routeList2);
+        if (!car2.driveRoute(list2)) {
+          continue;
+        }
+        if (!car1.driveRoute(list1)) {
+          continue;
+        }
 
-            if (!bestRoutes.isPresent()) {
-              bestRoutes = Optional.of(newRoutes);
-            } else if(bestRoutes.get().getSaving() > newRoutes.getSaving()) {
-              bestRoutes = Optional.of(newRoutes);
-            }
+        if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
+          double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
+          Route routeList1 = new Route();
+          routeList1.setRoute(list1);
+          routeList1.setDistance(car1.getCurrentDistance());
+          Route routeList2 = new Route();
+          routeList2.setRoute(list2);
+          routeList2.setDistance(car2.getCurrentDistance());
+          NewRoutes newRoutes = new NewRoutes(saving, routeList1, routeList2);
+
+          if (!bestRoutes.isPresent()) {
+            bestRoutes = Optional.of(newRoutes);
+          } else if (bestRoutes.get().getSaving() > newRoutes.getSaving()) {
+            bestRoutes = Optional.of(newRoutes);
           }
-        } catch (BatteryViolationException | TimewindowViolationException e) {}
+        }
       }
     }
     return bestRoutes;

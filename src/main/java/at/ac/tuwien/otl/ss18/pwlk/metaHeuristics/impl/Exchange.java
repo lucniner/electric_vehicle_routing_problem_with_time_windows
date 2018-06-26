@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 import org.slf4j.Logger;
@@ -130,9 +128,12 @@ public class Exchange {
 
         Car car1 = new Car(problemInstance, distanceHolder);
         Car car2 = new Car(problemInstance, distanceHolder);
-        try {
-          car2.driveRoute(list2);
-          car1.driveRoute(list1);
+          if (!car2.driveRoute(list2)) {
+            continue;
+          }
+          if (!car1.driveRoute(list1)) {
+            continue;
+          }
 
           if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
             double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
@@ -150,7 +151,6 @@ public class Exchange {
               bestRoutes = Optional.of(newRoutes);
             }
           }
-        } catch (BatteryViolationException | TimewindowViolationException e) {}
       }
     }
     return bestRoutes;
