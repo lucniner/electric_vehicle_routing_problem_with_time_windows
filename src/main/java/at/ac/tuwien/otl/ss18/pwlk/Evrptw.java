@@ -228,9 +228,9 @@ public class Evrptw {
       logger.info("Note: Check for invalid solutions are only made for the last run");
       return instanceReport;
     } else {
-      //final SolutionInstance solution = optimizedSolution.get();
-      //final InstanceVisualizer visualizer = new InstanceVisualizer(problemInstance, solution);
-      //visualizer.visualize();
+//      final SolutionInstance solution = optimizedSolution.get();
+//      final InstanceVisualizer visualizer = new InstanceVisualizer(problemInstance, solution);
+//      visualizer.visualize();
     }
 
     final String tempSolutionFile;
