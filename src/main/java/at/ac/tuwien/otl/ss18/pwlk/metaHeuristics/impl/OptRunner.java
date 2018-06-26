@@ -8,50 +8,51 @@ import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class OptRunner {
 
-    public static SolutionInstance runOpts(
-            final SolutionInstance solutionInstance,
-            ProblemInstance problemInstance,
-            DistanceHolder distanceHolder) {
-        SolutionInstance optimizedSolution = new SolutionInstance();
-        final List<Route> optimizedRoutes = new ArrayList<>();
+  public static SolutionInstance runOpts(
+          final SolutionInstance solutionInstance,
+          ProblemInstance problemInstance,
+          DistanceHolder distanceHolder) {
+    SolutionInstance optimizedSolution = new SolutionInstance();
+    final List<Route> optimizedRoutes = new ArrayList<>();
 
-        solutionInstance
-                .getRoutes()
-                .forEach(
-                        r -> {
-                            BestOrOptExchange exchange =
-                                    new BestOrOptExchange(r, problemInstance, distanceHolder);
-                            final Optional<Route> route = exchange.optimizeRoute();
-                            if (route.isPresent()) {
-                                optimizedRoutes.add(route.get());
-                            } else {
-                                optimizedRoutes.add(r);
-                            }
-                        });
+    solutionInstance
+            .getRoutes()
+            .forEach(
+                    r -> {
+                      BestOrOptExchange exchange =
+                              new BestOrOptExchange(r, problemInstance, distanceHolder);
+                      final Optional<Route> route = exchange.optimizeRoute();
+                      if (route.isPresent()) {
+                        optimizedRoutes.add(route.get());
+                      } else {
+                        optimizedRoutes.add(r);
+                      }
+                    });
 
-        optimizedSolution.setRoutes(optimizedRoutes);
+    optimizedSolution.setRoutes(optimizedRoutes);
 
-        SolutionInstance bestSolution = new SolutionInstance();
+    SolutionInstance bestSolution = new SolutionInstance();
 
-        final List<Route> bestRoutes = new ArrayList<>();
+    final List<Route> bestRoutes = new ArrayList<>();
 
-        optimizedSolution
-                .getRoutes()
-                .forEach(
-                        r -> {
-                            BestTwoOptExchagne exchange =
-                                    new BestTwoOptExchagne(r, problemInstance, distanceHolder);
-                            final Optional<Route> route = exchange.optimizeRoute();
-                            if (route.isPresent()) {
-                                bestRoutes.add(route.get());
-                            } else {
-                                bestRoutes.add(r);
-                            }
-                        });
-        bestSolution.setRoutes(bestRoutes);
-        return bestSolution;
-    }
+    optimizedSolution
+            .getRoutes()
+            .forEach(
+                    r -> {
+                      BestTwoOptExchagne exchange =
+                              new BestTwoOptExchagne(r, problemInstance, distanceHolder);
+                      final Optional<Route> route = exchange.optimizeRoute();
+                      if (route.isPresent()) {
+                        bestRoutes.add(route.get());
+                      } else {
+                        bestRoutes.add(r);
+                      }
+                    });
+    bestSolution.setRoutes(bestRoutes);
+    return bestSolution;
+  }
 }

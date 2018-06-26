@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 import org.slf4j.Logger;
@@ -21,8 +19,8 @@ public class CrossExchange {
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
 
-  Map<Pair<Route, Route>, Boolean> hopeLessExchange;
-  Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
+  private Map<Pair<Route, Route>, Boolean> hopeLessExchange;
+  private Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
 
 
   public CrossExchange(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
@@ -32,15 +30,14 @@ public class CrossExchange {
   }
 
 
-  public Optional<SolutionInstance> optimize(Map hopeLessExchange, Map alreadyComputed) {
+  public Optional<SolutionInstance> optimize(
+          Map<Pair<Route, Route>, Boolean> hopeLessExchange,
+          Map<Pair<Route, Route>, NewRoutes> alreadyComputed) {
     SolutionInstance bestSolutionInstance = solutionInstance;
     SolutionInstance currSolutionInstance = solutionInstance.copy();
 
     this.hopeLessExchange = hopeLessExchange;
     this.alreadyComputed = alreadyComputed;
-
-    hopeLessExchange = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
-    alreadyComputed = new ConcurrentHashMap<>();
 
     Map<Pair<Route, Route>, NewRoutes> savings = calculateSavingsValue(currSolutionInstance);
     while (!savings.isEmpty()) {
@@ -86,21 +83,17 @@ public class CrossExchange {
       for (final Route route2 : currSolution.getRoutes()) {
         if ((!route1.equals(route2))) {
           if (!hopeLessExchange.containsKey(new Pair(route1, route2))) {
-            boolean hopeless = true;
             if (alreadyComputed.containsKey(new Pair(route1, route2))) {
               NewRoutes newRoutes = alreadyComputed.get(new Pair(route1, route2));
               savings.put(new Pair(route1, route2), newRoutes);
-              hopeless = false;
             } else {
               Optional<NewRoutes> newRoute = exchangeNodes(route1, route2);
               if (newRoute.isPresent()) {
                 alreadyComputed.put(new Pair(route1, route2), newRoute.get());
                 savings.put(new Pair(route1, route2), newRoute.get());
-                hopeless = false;
+              } else {
+                hopeLessExchange.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
               }
-            }
-            if (hopeless) {
-              hopeLessExchange.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
             }
           }
         }
@@ -115,7 +108,7 @@ public class CrossExchange {
 
     Optional<NewRoutes> bestRoutes = Optional.empty();
 
-    if (fromRoute.size() < 4 || toRoute.size() < 4 ) {
+    if (fromRoute.size() < 4 || toRoute.size() < 4) {
       return Optional.empty();
     }
 
@@ -142,27 +135,30 @@ public class CrossExchange {
 
         Car car1 = new Car(problemInstance, distanceHolder);
         Car car2 = new Car(problemInstance, distanceHolder);
-        try {
-          car2.driveRoute(list2);
-          car1.driveRoute(list1);
 
-          if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
-            double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
-            Route routeList1 = new Route();
-            routeList1.setRoute(list1);
-            routeList1.setDistance(car1.getCurrentDistance());
-            Route routeList2 = new Route();
-            routeList2.setRoute(list2);
-            routeList2.setDistance(car2.getCurrentDistance());
-            NewRoutes newRoutes = new NewRoutes(saving, routeList1, routeList2);
+        if (!car2.driveRoute(list2)) {
+          continue;
+        }
+        if (!car1.driveRoute(list1)) {
+          continue;
+        }
 
-            if (!bestRoutes.isPresent()) {
-              bestRoutes = Optional.of(newRoutes);
-            } else if(bestRoutes.get().getSaving() > newRoutes.getSaving()) {
-              bestRoutes = Optional.of(newRoutes);
-            }
+        if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
+          double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
+          Route routeList1 = new Route();
+          routeList1.setRoute(list1);
+          routeList1.setDistance(car1.getCurrentDistance());
+          Route routeList2 = new Route();
+          routeList2.setRoute(list2);
+          routeList2.setDistance(car2.getCurrentDistance());
+          NewRoutes newRoutes = new NewRoutes(saving, routeList1, routeList2);
+
+          if (!bestRoutes.isPresent()) {
+            bestRoutes = Optional.of(newRoutes);
+          } else if (bestRoutes.get().getSaving() > newRoutes.getSaving()) {
+            bestRoutes = Optional.of(newRoutes);
           }
-        } catch (BatteryViolationException | TimewindowViolationException e) {}
+        }
       }
     }
     return bestRoutes;

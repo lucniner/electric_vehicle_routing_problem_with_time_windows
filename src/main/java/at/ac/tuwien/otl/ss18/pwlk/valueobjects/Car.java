@@ -1,8 +1,6 @@
 package at.ac.tuwien.otl.ss18.pwlk.valueobjects;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.BatteryViolationException;
-import at.ac.tuwien.otl.ss18.pwlk.exceptions.TimewindowViolationException;
 
 import java.util.List;
 
@@ -44,24 +42,18 @@ public class Car {
     currentBatteryCapacity = problemInstance.getBatteryCapacity(); // vehicle has now full capacity
   }
 
-  private void moveCar(AbstractNode departure, AbstractNode arrival) throws BatteryViolationException, TimewindowViolationException {
+  private boolean moveCar(AbstractNode departure, AbstractNode arrival) {
     double distance = distanceHolder.getInterNodeDistance(departure, arrival);
     currentTime += distance / problemInstance.getAverageVelocity(); // travel time = distance/velocity
     currentBatteryCapacity -= problemInstance.getChargeConsumptionRate() * distance; // subtract used battery capacity
     currentDistance += distance; // add travelled distance to total travelled distance
 
     if (currentBatteryCapacity < 0) { // if battery was not enough to travel the distance throw exception
-      throw new BatteryViolationException("Battery constraint was violated");
+      return false;
     }
 
     if (currentTime > arrival.getTimeWindow().getDueTime()) { // if arrival after latest arrival time throw exception
-      throw new TimewindowViolationException("Time window was violated (arrival was to late on node "
-              + arrival.getId()
-              + ", window end: "
-              + arrival.getTimeWindow().getDueTime()
-              + ", arrival time: "
-              + currentTime
-              + ")");
+      return false;
     }
 
     if (currentTime < arrival.getTimeWindow().getReadyTime()) { // if arrival before ready time wait
@@ -74,17 +66,21 @@ public class Car {
       chargeCar();
     }
 
+    return true;
   }
 
-  public void driveRoute(List<AbstractNode> route) throws BatteryViolationException, TimewindowViolationException {
+  public boolean driveRoute(List<AbstractNode> route) {
     AbstractNode lastNode = null;
     for (AbstractNode abstractNode : route) {
       if (lastNode == null) {
         lastNode = abstractNode;
       } else {
-        moveCar(lastNode, abstractNode);
+        if(!moveCar(lastNode, abstractNode)) {
+          return false;
+        }
         lastNode = abstractNode;
       }
     }
+    return true;
   }
 }
