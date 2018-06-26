@@ -56,8 +56,11 @@ public class ProblemReader {
     String line = reader.readLine();
     int index = 0;
     while (line != null && !line.startsWith("Q") && !line.trim().isEmpty()) {
-      handleNode(line, index);
-      index++;
+      if (!line.startsWith("S0")) {
+        handleNode(line, index);
+        index++;
+      }
+
       line = reader.readLine();
     }
   }

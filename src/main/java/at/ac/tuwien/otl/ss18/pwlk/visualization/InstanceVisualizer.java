@@ -54,7 +54,6 @@ public class InstanceVisualizer {
         }
 
         final List<ChargingStations> chargings = problem.getChargingStations();
-        chargings.remove(0);
         for (final ChargingStations f : chargings) {
             final Node fuel = graph.addNode(f.getId());
             fuel.addAttribute("ui.style", "fill-color: red;size: 15px;");
