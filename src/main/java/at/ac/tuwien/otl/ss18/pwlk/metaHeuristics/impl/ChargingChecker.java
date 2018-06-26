@@ -1,6 +1,7 @@
 package at.ac.tuwien.otl.ss18.pwlk.metaHeuristics.impl;
 
 import at.ac.tuwien.otl.ss18.pwlk.distance.DistanceHolder;
+import at.ac.tuwien.otl.ss18.pwlk.util.Pair;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.*;
 
 import java.util.ArrayList;
@@ -86,17 +87,24 @@ public class ChargingChecker {
   }
 
   private void insertChargingStationBetweenDepotAndFirstCustomer(final List<AbstractNode> route) {
-    final AbstractNode chargingStation = distanceHolder.getNearestRechargingStationsForCustomerInDistance(route.get(1), route.get(0)).get(0).getKey();
-    route.add(1, chargingStation);
+    List<Pair<AbstractNode, Double>> chargs = distanceHolder.getNearestRechargingStationsForCustomerInDistance(route.get(1), route.get(0));
+
+    if (!chargs.isEmpty()) {
+      final AbstractNode chargingStation = chargs.get(0).getKey();
+      route.add(1, chargingStation);
+    }
   }
 
   private void insertChargingStationBetweenLastCustomerAndDepot(final List<AbstractNode> route) {
     final int depotIndex = route.size() - 1;
     final int lastCustomer = route.size() - 2;
-    final AbstractNode chargingStation = distanceHolder.getNearestRechargingStationsForCustomerInDistance(route.get(lastCustomer), route.get(depotIndex)).get(0).getKey();
-    route.add(depotIndex, chargingStation);
-  }
+    List<Pair<AbstractNode, Double>> chargs = distanceHolder.getNearestRechargingStationsForCustomerInDistance(route.get(lastCustomer), route.get(depotIndex));
 
+    if (!chargs.isEmpty()) {
+      final AbstractNode chargingStation = chargs.get(0).getKey();
+      route.add(depotIndex, chargingStation);
+    }
+  }
 
   private int getIndexOfFirstCustomer(final List<AbstractNode> route) {
     int index = 0;
