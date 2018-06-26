@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SimulatedAnnealing extends AbstractOptimizeSolution {
     private static final int MAX_ITERATION = 500;
+    private static final int PENALTY = 60;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private ProblemInstance problemInstance;
     private DistanceHolder distanceHolder;
@@ -52,7 +53,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
             bestSolution = new ChargingChecker(problemInstance, distanceHolder, bestSolution).optimize();
             SolutionInstance solutionInstance1 = bestSolution.copy();
             for (Route route : solutionInstance1.getRoutes()) {
-                route.setDistance(route.getDistance() + 20);
+                route.setDistance(route.getDistance() + PENALTY);
             }
             Optional<SolutionInstance> sol =
                     new Relocate(solutionInstance1, problemInstance, distanceHolder).optimize(hopeLess_relocate, alreadyComputed_relocate);
@@ -73,7 +74,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
 
             solutionInstance1 = bestSolution.copy();
             for (Route route : solutionInstance1.getRoutes()) {
-                route.setDistance(route.getDistance() + 20);
+                route.setDistance(route.getDistance() + PENALTY);
             }
 
             sol = new Exchange(solutionInstance1, problemInstance, distanceHolder).optimize(hopeLess_exchange, alreadyComputed_exchange);
@@ -93,7 +94,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
 
             solutionInstance1 = bestSolution.copy();
             for (Route route : solutionInstance1.getRoutes()) {
-                route.setDistance(route.getDistance() + 20);
+                route.setDistance(route.getDistance() + PENALTY);
             }
             sol = new CrossExchange(solutionInstance1, problemInstance, distanceHolder).optimize(hopeLess_cross, alreadyComputed_cross);
             if (sol.isPresent()) {

@@ -13,7 +13,6 @@ import at.ac.tuwien.otl.ss18.pwlk.report.Report;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.ProblemInstance;
 import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 import at.ac.tuwien.otl.ss18.pwlk.verifier.SolutionVerifier;
-import at.ac.tuwien.otl.ss18.pwlk.visualization.InstanceVisualizer;
 import at.ac.tuwien.otl.ss18.pwlk.writer.SolutionWriter;
 import org.apache.commons.cli.CommandLine;
 import org.slf4j.Logger;
@@ -229,9 +228,9 @@ public class Evrptw {
       logger.info("Note: Check for invalid solutions are only made for the last run");
       return instanceReport;
     } else {
-        final SolutionInstance solution = optimizedSolution.get();
-        final InstanceVisualizer visualizer = new InstanceVisualizer(problemInstance, solution);
-        visualizer.visualize();
+//        final SolutionInstance solution = optimizedSolution.get();
+//        final InstanceVisualizer visualizer = new InstanceVisualizer(problemInstance, solution);
+//        visualizer.visualize();
     }
 
     final String tempSolutionFile;
