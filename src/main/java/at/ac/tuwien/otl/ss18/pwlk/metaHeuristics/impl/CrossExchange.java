@@ -19,8 +19,8 @@ public class CrossExchange {
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
 
-  Map<Pair<Route, Route>, Boolean> hopeLessExchange;
-  Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
+  private Map<Pair<Route, Route>, Boolean> hopeLessExchange;
+  private Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
 
 
   public CrossExchange(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
@@ -30,15 +30,14 @@ public class CrossExchange {
   }
 
 
-  public Optional<SolutionInstance> optimize(Map hopeLessExchange, Map alreadyComputed) {
+  public Optional<SolutionInstance> optimize(
+          Map<Pair<Route, Route>, Boolean> hopeLessExchange,
+          Map<Pair<Route, Route>, NewRoutes> alreadyComputed) {
     SolutionInstance bestSolutionInstance = solutionInstance;
     SolutionInstance currSolutionInstance = solutionInstance.copy();
 
     this.hopeLessExchange = hopeLessExchange;
     this.alreadyComputed = alreadyComputed;
-
-    hopeLessExchange = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
-    alreadyComputed = new ConcurrentHashMap<>();
 
     Map<Pair<Route, Route>, NewRoutes> savings = calculateSavingsValue(currSolutionInstance);
     while (!savings.isEmpty()) {
@@ -84,21 +83,17 @@ public class CrossExchange {
       for (final Route route2 : currSolution.getRoutes()) {
         if ((!route1.equals(route2))) {
           if (!hopeLessExchange.containsKey(new Pair(route1, route2))) {
-            boolean hopeless = true;
             if (alreadyComputed.containsKey(new Pair(route1, route2))) {
               NewRoutes newRoutes = alreadyComputed.get(new Pair(route1, route2));
               savings.put(new Pair(route1, route2), newRoutes);
-              hopeless = false;
             } else {
               Optional<NewRoutes> newRoute = exchangeNodes(route1, route2);
               if (newRoute.isPresent()) {
                 alreadyComputed.put(new Pair(route1, route2), newRoute.get());
                 savings.put(new Pair(route1, route2), newRoute.get());
-                hopeless = false;
+              } else {
+                hopeLessExchange.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
               }
-            }
-            if (hopeless) {
-              hopeLessExchange.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
             }
           }
         }
@@ -113,7 +108,7 @@ public class CrossExchange {
 
     Optional<NewRoutes> bestRoutes = Optional.empty();
 
-    if (fromRoute.size() < 4 || toRoute.size() < 4 ) {
+    if (fromRoute.size() < 4 || toRoute.size() < 4) {
       return Optional.empty();
     }
 

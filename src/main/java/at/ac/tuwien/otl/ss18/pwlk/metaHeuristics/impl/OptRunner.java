@@ -12,49 +12,49 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class OptRunner {
 
-    public static SolutionInstance runOpts(
-            final SolutionInstance solutionInstance,
-            ProblemInstance problemInstance,
-            DistanceHolder distanceHolder) {
-        SolutionInstance optimizedSolution = new SolutionInstance();
-        final List<Route> optimizedRoutes = new CopyOnWriteArrayList<>();
+  public static SolutionInstance runOpts(
+          final SolutionInstance solutionInstance,
+          ProblemInstance problemInstance,
+          DistanceHolder distanceHolder) {
+    SolutionInstance optimizedSolution = new SolutionInstance();
+    final List<Route> optimizedRoutes = new CopyOnWriteArrayList<>();
 
-        solutionInstance
-                .getRoutes()
-                .parallelStream()
-                .forEach(
-                        r -> {
-                            BestOrOptExchange exchange =
-                                    new BestOrOptExchange(r, problemInstance, distanceHolder);
-                            final Optional<Route> route = exchange.optimizeRoute();
-                            if (route.isPresent()) {
-                                optimizedRoutes.add(route.get());
-                            } else {
-                                optimizedRoutes.add(r);
-                            }
-                        });
+    solutionInstance
+            .getRoutes()
+            .parallelStream()
+            .forEach(
+                    r -> {
+                      BestOrOptExchange exchange =
+                              new BestOrOptExchange(r, problemInstance, distanceHolder);
+                      final Optional<Route> route = exchange.optimizeRoute();
+                      if (route.isPresent()) {
+                        optimizedRoutes.add(route.get());
+                      } else {
+                        optimizedRoutes.add(r);
+                      }
+                    });
 
-        optimizedSolution.setRoutes(optimizedRoutes);
+    optimizedSolution.setRoutes(optimizedRoutes);
 
-        SolutionInstance bestSolution = new SolutionInstance();
+    SolutionInstance bestSolution = new SolutionInstance();
 
-        final List<Route> bestRoutes = new CopyOnWriteArrayList<>();
+    final List<Route> bestRoutes = new CopyOnWriteArrayList<>();
 
-        optimizedSolution
-                .getRoutes()
-                .parallelStream()
-                .forEach(
-                        r -> {
-                            BestTwoOptExchagne exchange =
-                                    new BestTwoOptExchagne(r, problemInstance, distanceHolder);
-                            final Optional<Route> route = exchange.optimizeRoute();
-                            if (route.isPresent()) {
-                                bestRoutes.add(route.get());
-                            } else {
-                                bestRoutes.add(r);
-                            }
-                        });
-        bestSolution.setRoutes(bestRoutes);
-        return bestSolution;
-    }
+    optimizedSolution
+            .getRoutes()
+            .parallelStream()
+            .forEach(
+                    r -> {
+                      BestTwoOptExchagne exchange =
+                              new BestTwoOptExchagne(r, problemInstance, distanceHolder);
+                      final Optional<Route> route = exchange.optimizeRoute();
+                      if (route.isPresent()) {
+                        bestRoutes.add(route.get());
+                      } else {
+                        bestRoutes.add(r);
+                      }
+                    });
+    bestSolution.setRoutes(bestRoutes);
+    return bestSolution;
+  }
 }

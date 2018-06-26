@@ -9,21 +9,20 @@ import java.util.Optional;
 
 public class OptimizeSolutionStub extends AbstractOptimizeSolution {
 
+  @Override
+  Optional<SolutionInstance> runAlgorithm(
+          SolutionInstance solutionInstance,
+          ProblemInstance problemInstance,
+          DistanceHolder distanceHolder) {
 
-    @Override
-    Optional<SolutionInstance> runAlgorithm(
-            SolutionInstance solutionInstance,
-            ProblemInstance problemInstance,
-            DistanceHolder distanceHolder) {
 
+    SolutionInstance bestSolution = new SimulatedAnnealing().runAlgorithm(solutionInstance, problemInstance, distanceHolder).get();
+    OperatorRunner runner = new OperatorRunner(problemInstance, distanceHolder, bestSolution);
+    bestSolution = runner.runAlgorithm();
 
-        SolutionInstance bestSolution = new SimulatedAnnealing().runAlgorithm(solutionInstance, problemInstance, distanceHolder).get();
-        OperatorRunner runner = new OperatorRunner(problemInstance, distanceHolder, bestSolution);
-        bestSolution = runner.runAlgorithm();
-
-        RouteFilter.finalizeRoutes(bestSolution.getRoutes());
-        return Optional.of(bestSolution);
-    }
+    RouteFilter.finalizeRoutes(bestSolution.getRoutes());
+    return Optional.of(bestSolution);
+  }
 
 
 }

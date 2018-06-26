@@ -19,8 +19,8 @@ public class Exchange {
   private ProblemInstance problemInstance;
   private DistanceHolder distanceHolder;
 
-  Map<Pair<Route, Route>, Boolean> hopeLessExchange;
-  Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
+  private Map<Pair<Route, Route>, Boolean> hopeLessExchange;
+  private Map<Pair<Route, Route>, NewRoutes> alreadyComputed;
 
   public Exchange(SolutionInstance solutionInstance, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
     this.solutionInstance = solutionInstance;
@@ -29,7 +29,9 @@ public class Exchange {
   }
 
 
-  public Optional<SolutionInstance> optimize(Map hopeLessExchange, Map alreadyComputed) {
+  public Optional<SolutionInstance> optimize(
+          Map<Pair<Route, Route>, Boolean> hopeLessExchange,
+          Map<Pair<Route, Route>, NewRoutes> alreadyComputed) {
     SolutionInstance bestSolutionInstance = solutionInstance;
     SolutionInstance currSolutionInstance = solutionInstance.copy();
 
@@ -80,21 +82,17 @@ public class Exchange {
       for (final Route route2 : currSolution.getRoutes()) {
         if ((!route1.equals(route2))) {
           if (!hopeLessExchange.containsKey(new Pair(route1, route2))) {
-            boolean hopeless = true;
             if (alreadyComputed.containsKey(new Pair(route1, route2))) {
               NewRoutes newRoutes = alreadyComputed.get(new Pair(route1, route2));
               savings.put(new Pair(route1, route2), newRoutes);
-              hopeless = false;
             } else {
               Optional<NewRoutes> newRoute = exchangeNodes(route1, route2);
               if (newRoute.isPresent()) {
                 alreadyComputed.put(new Pair(route1, route2), newRoute.get());
                 savings.put(new Pair(route1, route2), newRoute.get());
-                hopeless = false;
+              } else {
+                hopeLessExchange.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
               }
-            }
-            if (hopeless) {
-              hopeLessExchange.put(new Pair(route1.copyRoute(), route2.copyRoute()), true);
             }
           }
         }
@@ -109,8 +107,8 @@ public class Exchange {
 
     Optional<NewRoutes> bestRoutes = Optional.empty();
 
-    for (int i=1; i<fromRoute.size()-1; i++) {
-      for (int j=1; j<toRoute.size()-1; j++) {
+    for (int i = 1; i < fromRoute.size() - 1; i++) {
+      for (int j = 1; j < toRoute.size() - 1; j++) {
         List<AbstractNode> list1 = new ArrayList<>(fromRoute);
         List<AbstractNode> list2 = new ArrayList<>(toRoute);
         AbstractNode node1 = list1.remove(i);
@@ -128,29 +126,29 @@ public class Exchange {
 
         Car car1 = new Car(problemInstance, distanceHolder);
         Car car2 = new Car(problemInstance, distanceHolder);
-          if (!car2.driveRoute(list2)) {
-            continue;
-          }
-          if (!car1.driveRoute(list1)) {
-            continue;
-          }
+        if (!car2.driveRoute(list2)) {
+          continue;
+        }
+        if (!car1.driveRoute(list1)) {
+          continue;
+        }
 
-          if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
-            double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
-            Route routeList1 = new Route();
-            routeList1.setRoute(list1);
-            routeList1.setDistance(car1.getCurrentDistance());
-            Route routeList2 = new Route();
-            routeList2.setRoute(list2);
-            routeList2.setDistance(car2.getCurrentDistance());
-            NewRoutes newRoutes = new NewRoutes(saving, routeList1, routeList2);
+        if ((car1.getCurrentDistance() + car2.getCurrentDistance()) < (route1.getDistance() + route2.getDistance())) {
+          double saving = route1.getDistance() + route2.getDistance() - car1.getCurrentDistance() - car2.getCurrentDistance();
+          Route routeList1 = new Route();
+          routeList1.setRoute(list1);
+          routeList1.setDistance(car1.getCurrentDistance());
+          Route routeList2 = new Route();
+          routeList2.setRoute(list2);
+          routeList2.setDistance(car2.getCurrentDistance());
+          NewRoutes newRoutes = new NewRoutes(saving, routeList1, routeList2);
 
-            if (!bestRoutes.isPresent()) {
-              bestRoutes = Optional.of(newRoutes);
-            } else if(bestRoutes.get().getSaving() > newRoutes.getSaving()) {
-              bestRoutes = Optional.of(newRoutes);
-            }
+          if (!bestRoutes.isPresent()) {
+            bestRoutes = Optional.of(newRoutes);
+          } else if (bestRoutes.get().getSaving() > newRoutes.getSaving()) {
+            bestRoutes = Optional.of(newRoutes);
           }
+        }
       }
     }
     return bestRoutes;

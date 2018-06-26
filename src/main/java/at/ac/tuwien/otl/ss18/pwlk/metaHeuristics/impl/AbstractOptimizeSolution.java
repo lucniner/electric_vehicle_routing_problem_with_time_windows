@@ -34,7 +34,7 @@ public abstract class AbstractOptimizeSolution implements IOptimizeSolution {
     } catch (ExecutionException | InterruptedException e) {
       logger.error("Error occured during optimization algorithm: " + e);
     } catch (TimeoutException t) {
-      logger.info("Finishing algorithm within time limit of " + timeout  + " " + TimeUnit.SECONDS.name() + " was not possible");
+      logger.info("Finishing algorithm within time limit of " + timeout + " " + TimeUnit.SECONDS.name() + " was not possible");
     }
 
     return optimizedSolutionInstance;

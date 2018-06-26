@@ -17,40 +17,40 @@ public class BestTwoOptExchagne {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
-    private final Route route;
-    private final ProblemInstance problemInstance;
-    private final DistanceHolder distanceHolder;
-    private final PriorityQueue<Route> routes = new PriorityQueue<>();
+  private final Route route;
+  private final ProblemInstance problemInstance;
+  private final DistanceHolder distanceHolder;
+  private final PriorityQueue<Route> routes = new PriorityQueue<>();
 
-    public BestTwoOptExchagne(Route route, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
-        this.route = route;
-        this.problemInstance = problemInstance;
-        this.distanceHolder = distanceHolder;
+  public BestTwoOptExchagne(Route route, ProblemInstance problemInstance, DistanceHolder distanceHolder) {
+    this.route = route;
+    this.problemInstance = problemInstance;
+    this.distanceHolder = distanceHolder;
+  }
+
+
+  public Optional<Route> optimizeRoute() {
+
+    twoExchange();
+
+    if (routes.peek() != null) {
+      return Optional.of(routes.peek());
+    } else {
+      return Optional.empty();
     }
+  }
 
-
-    public Optional<Route> optimizeRoute() {
-
-        twoExchange();
-
-        if (routes.peek() != null) {
-            return Optional.of(routes.peek());
-        } else {
-            return Optional.empty();
-        }
+  private void twoExchange() {
+    for (int i = 1; i < route.getRoute().size() - 2; i++) {
+      final Route opt = route.copyRoute();
+      final List<AbstractNode> nodes = opt.getRoute();
+      final AbstractNode first = nodes.remove(i);
+      final AbstractNode second = nodes.remove(i);
+      nodes.add(i, second);
+      nodes.add(i, first);
+      driveCar(nodes, opt);
     }
-
-    private void twoExchange() {
-        for (int i = 1; i < route.getRoute().size() - 2; i++) {
-            final Route opt = route.copyRoute();
-            final List<AbstractNode> nodes = opt.getRoute();
-            final AbstractNode first = nodes.remove(i);
-            final AbstractNode second = nodes.remove(i);
-            nodes.add(i, second);
-            nodes.add(i, first);
-            driveCar(nodes, opt);
-        }
-    }
+  }
 
 
   private void driveCar(final List<AbstractNode> nodes, final Route opt) {
