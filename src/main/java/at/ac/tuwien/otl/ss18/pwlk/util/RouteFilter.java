@@ -36,4 +36,14 @@ public class RouteFilter {
         }
         return nodeSet;
     }
+
+    public static void finalizeRoutes(final List<Route> routes) {
+        int i = 0;
+        for (final Route r : new ArrayList<>(routes)) {
+            if (r.getRoute().size() == 2 || r.getRoute().size() == 1) {
+                routes.remove(i--);
+            }
+            i++;
+        }
+    }
 }

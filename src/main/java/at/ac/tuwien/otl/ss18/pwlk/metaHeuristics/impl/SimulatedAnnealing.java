@@ -12,14 +12,12 @@ import at.ac.tuwien.otl.ss18.pwlk.valueobjects.SolutionInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SimulatedAnnealing extends AbstractOptimizeSolution {
-    private static final int MAX_ITERATION = 150;
+    private static final int MAX_ITERATION = 500;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private ProblemInstance problemInstance;
     private DistanceHolder distanceHolder;
@@ -35,8 +33,8 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
 
         SolutionInstance bestSolution = solutionInstance;
 
-        double temperature = 300;
-        double cooling_factor = 0.97;
+        double temperature = 500;
+        double cooling_factor = 0.98;
 
 
         Map<Pair<Route, Route>, Boolean> hopeLess_exchange = new ConcurrentHashMap<Pair<Route, Route>, Boolean>();
@@ -51,7 +49,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
             logger.info("Current iteration: " + i);
 
             bestSolution.setRoutes(RouteFilter.filterNodesInRoutes(bestSolution.getRoutes()));
-
+            bestSolution = new ChargingChecker(problemInstance, distanceHolder, bestSolution).optimize();
             SolutionInstance solutionInstance1 = bestSolution.copy();
             for (Route route : solutionInstance1.getRoutes()) {
                 route.setDistance(route.getDistance() + 20);
@@ -112,7 +110,7 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
                 }
             }
 
-            SolutionInstance instance = runOpts(bestSolution, problemInstance, distanceHolder);
+            SolutionInstance instance = OptRunner.runOpts(bestSolution, problemInstance, distanceHolder);
             if (instance.getDistanceSum() < bestSolution.getDistanceSum()) {
                 logger.info("opts found new best solution");
                 bestSolution = instance;
@@ -123,65 +121,14 @@ public class SimulatedAnnealing extends AbstractOptimizeSolution {
             }
 
         }
-        finalizeRoutes(bestSolution.getRoutes());
+        RouteFilter.finalizeRoutes(bestSolution.getRoutes());
 
 
         return Optional.of(bestSolution);
     }
 
-    private SolutionInstance runOpts(
-            final SolutionInstance solutionInstance,
-            ProblemInstance problemInstance,
-            DistanceHolder distanceHolder) {
-        SolutionInstance optimizedSolution = new SolutionInstance();
-        final List<Route> optimizedRoutes = new ArrayList<>();
 
-        solutionInstance
-                .getRoutes()
-                .forEach(
-                        r -> {
-                            BestOrOptExchange exchange =
-                                    new BestOrOptExchange(r, problemInstance, distanceHolder);
-                            final Optional<Route> route = exchange.optimizeRoute();
-                            if (route.isPresent()) {
-                                optimizedRoutes.add(route.get());
-                            } else {
-                                optimizedRoutes.add(r);
-                            }
-                        });
 
-        optimizedSolution.setRoutes(optimizedRoutes);
-
-        SolutionInstance bestSolution = new SolutionInstance();
-
-        final List<Route> bestRoutes = new ArrayList<>();
-
-        optimizedSolution
-                .getRoutes()
-                .forEach(
-                        r -> {
-                            BestTwoOptExchagne exchange =
-                                    new BestTwoOptExchagne(r, problemInstance, distanceHolder);
-                            final Optional<Route> route = exchange.optimizeRoute();
-                            if (route.isPresent()) {
-                                bestRoutes.add(route.get());
-                            } else {
-                                bestRoutes.add(r);
-                            }
-                        });
-        bestSolution.setRoutes(bestRoutes);
-        return bestSolution;
-    }
-
-    private void finalizeRoutes(final List<Route> routes) {
-        int i = 0;
-        for (final Route r : new ArrayList<>(routes)) {
-            if (r.getRoute().size() == 2) {
-                routes.remove(i--);
-            }
-            i++;
-        }
-    }
 
     private void recalculateDistances(SolutionInstance solutionInstance) {
         for (Route route : solutionInstance.getRoutes()) {
